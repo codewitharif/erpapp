@@ -30,7 +30,7 @@ const supplierRoutes = require("./routes/purchases/supplierRoutes");
 
 // app.use(cors())
 app.use(cors({
-  origin: ['https://buddy-book.vercel.app', 'https://buddybookz.netlify.app', "*" ],
+  origin: ['https://bizstripe.vercel.app', "*" ],
   methods: ['GET', 'POST','PUT', 'PATCH', 'DELETE'],
   credentials: true,
 }));
