@@ -17,7 +17,7 @@ router.get("/:id", customerController.getCustomerById);
 router.put("/:id", customerController.updateCustomer);
 
 // Route to delete a customer by ID
-//TESTING DEPLOYMENT
+//TESTING DEPLOYMENT 2
 router.delete("/:id", customerController.deleteCustomer);
 
 module.exports = router;
