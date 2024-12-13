@@ -26,16 +26,14 @@ const purchaseRoutes = require("./routes/purchases/purchaseRoutes");
 const supplierRoutes = require("./routes/purchases/supplierRoutes");
 
 // Middleware
-app.use(
-  cors({
-    origin: [
-      "https://movieappx.vercel.app"
-    ],
-    methods: ["GET", "POST","PUT","DELETE"],
-    credentials: true,
-  })
-);
 
+
+// app.use(cors())
+app.use(cors({
+  origin: ['https://buddy-book.vercel.app', 'https://buddybookz.netlify.app', "*" ],
+  methods: ['GET', 'POST','PUT', 'PATCH', 'DELETE'],
+  credentials: true,
+}));
 app.use(express.json());
 
 
@@ -63,7 +61,7 @@ app.use("/api/suppliers", supplierRoutes);
 
 // Routes
 app.get("/", (req, res) => {
-  res.status(200).json("server is running fine...");
+  res.status(200).json("server is running...");
 });
 
 // Import Routes (for example)
