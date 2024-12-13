@@ -29,8 +29,7 @@ const supplierRoutes = require("./routes/purchases/supplierRoutes");
 app.use(
   cors({
     origin: [
-      "https://movieappx.vercel.app",
-      "*",
+      "https://movieappx.vercel.app"
     ],
     methods: ["GET", "POST","PUT","DELETE"],
     credentials: true,
