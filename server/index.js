@@ -30,7 +30,6 @@ app.use(
   cors({
     origin: [
       "https://movieappx.vercel.app",
-      "https://movieappi.netlify.app",
       "*",
     ],
     methods: ["GET", "POST","PUT","DELETE"],
