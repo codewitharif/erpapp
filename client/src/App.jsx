@@ -6,7 +6,7 @@ import Configuration from "./components/configurations/Configuration";
 import AddCustomer from "./components/customer/AddCustomer";
 import ViewCustomer from "./components/customer/ViewCustomer";
 import SendMessage from "./components/customer/SendMessage";
-import AddStocks from "./components/stocks/addStocks";
+import AddStocks from "./components/stocks/AddStocks";
 import ViewStocks from "./components/stocks/viewStocks";
 import EditStocks from "./components/stocks/editStocks";
 import AvailableStocks from "./components/stocks/AvailableStocks";
