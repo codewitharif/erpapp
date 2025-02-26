@@ -25,11 +25,13 @@ const purchaseSchema = new Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "BankAccount",
       required: false,
+      default: null,
     },
     transportId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Transport",
       required: false,
+      default: null,
     },
     remark: { type: String, default: "" },
     purchaseItemsId: {

@@ -3,7 +3,6 @@ import axios from "axios"; // Import axios
 import { TiTick } from "react-icons/ti";
 import { FaEdit, FaTrash, FaSave, FaTimes } from "react-icons/fa"; // Import icons
 
-
 const Transport = () => {
   const [transportData, setTransportData] = useState([]);
   const [formData, setFormData] = useState({
@@ -185,7 +184,7 @@ const Transport = () => {
 
       {/* Table Section */}
       <div className="overflow-x-auto">
-        <table className="table w-full">
+        <table className="table table-xs w-full">
           <thead>
             <tr>
               <th>Sr.</th>
@@ -281,7 +280,7 @@ const Transport = () => {
                         className="btn btn-error btn-xs"
                         onClick={() => handleDelete(data._id)}
                       >
-                        <FaTrash/>
+                        <FaTrash />
                       </button>
                     </td>
                   </>

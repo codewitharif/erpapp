@@ -21,6 +21,8 @@ import ViewSales from "./components/sales/ViewSales";
 import SaleInfo from "./components/sales/SaleInfo";
 import Suppliers from "./components/purchase/Suppliers";
 import UpdatePurchase from "./components/purchase/UpdatePurchase";
+import PurchaseReport from "./components/purchase/PurchaseReport";
+import UpdateSales from "./components/sales/UpdateSales";
 
 const App = () => {
   return (
@@ -45,11 +47,13 @@ const App = () => {
         <Route path="addSupplier" element={<Suppliers />} />
         <Route path="viewOrder" element={<ViewOrder />} />
         <Route path="updatePurchase/:purchaseId" element={<UpdatePurchase />} />
+        <Route path="purchaseReport" element={<PurchaseReport />} />
         {/* sale routes */}
         <Route path="addInvoice" element={<AddInvoice />} />
         <Route path="viewInvoice" element={<ViewInvoice />} />
-        <Route path="viewSales" element={<ViewSales />} />
+        <Route path="saleReport" element={<ViewSales />} />
         <Route path="saleInfo" element={<SaleInfo />} />
+        <Route path="updateSales/:saleId" element={<UpdateSales />} />
       </Routes>
     </>
   );

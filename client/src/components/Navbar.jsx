@@ -54,8 +54,11 @@ const Navbar = () => {
                       <Link to="addSupplier">Add Supplier</Link>
                     </li>
                     <li>
-                      <Link to="viewOrder">View Order</Link>
+                      <Link to="purchaseReport">Purchase Report</Link>
                     </li>
+                    {/* <li>
+                      <Link to="viewOrder">Purchase Info</Link>
+                    </li> */}
                   </ul>
                 </details>
               </li>
@@ -69,8 +72,9 @@ const Navbar = () => {
                     <li>
                       <Link to="viewInvoice">View Invoicce</Link>
                     </li>
+
                     <li>
-                      <Link to="viewSales">View Sale</Link>
+                      <Link to="saleReport">Sales Report</Link>
                     </li>
                     <li>
                       <Link to="saleInfo">Sale Info</Link>
@@ -141,8 +145,11 @@ const Navbar = () => {
                   <Link to="addSupplier">Add Supplier</Link>
                 </li>
                 <li>
-                  <Link to="viewOrder">View Order</Link>
+                  <Link to="purchaseReport">Purchase Report</Link>
                 </li>
+                {/* <li>
+                  <Link to="viewOrder">Purchase Info</Link>
+                </li> */}
               </ul>
             </li>
 
@@ -155,8 +162,9 @@ const Navbar = () => {
                 <li>
                   <Link to="viewInvoice">View Invoice</Link>
                 </li>
+
                 <li>
-                  <Link to="viewSales">View Sale</Link>
+                  <Link to="saleReport">Sales Report</Link>
                 </li>
                 <li>
                   <Link to="saleInfo">Sale Info</Link>

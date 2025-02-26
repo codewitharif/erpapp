@@ -55,10 +55,8 @@ const AvailableStocks = () => {
   });
 
   return (
-    <div className="container mx-auto py-6">
-      <h1 className="text-3xl font-bold mb-6">
-        Available Stock Details
-      </h1>
+    <div className="p-4">
+      <h1 className="text-2xl font-bold mb-4">Available Stock Details</h1>
 
       {/* Filter Section */}
       <div className="flex flex-wrap items-center gap-4 mb-4">

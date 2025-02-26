@@ -30,7 +30,7 @@ const supplierRoutes = require("./routes/purchases/supplierRoutes");
 
 // app.use(cors())
 app.use(cors({
-  origin: ['https://bizstripe.vercel.app', "*" ],
+  origin: ['https://bizstripe.vercel.app','http://localhost:5173', "*" ],
   methods: ['GET', 'POST','PUT', 'PATCH', 'DELETE'],
   credentials: true,
 }));

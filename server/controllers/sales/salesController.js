@@ -2,12 +2,12 @@ const Sales = require("../../models/sales/salesModel");
 const SoldItem = require("../../models/sales/soldItemModel");
 const Customer = require("../../models/customers/customerModel");
 const Stock = require("../../models/stocks/stocksModel");
+const mongoose = require("mongoose");
 
 // Create a new sale
 exports.createSale = async (req, res) => {
   try {
     const {
-      items,
       customerId,
       invoiceNo,
       totalAmount,
@@ -15,11 +15,13 @@ exports.createSale = async (req, res) => {
       transportCharges,
       gstTotal,
       netTotal,
-      paymentMethod,
-      bankId,
       balance,
-      purchaseOrderNo,
+      cash,
+      card,
+      bankId,
+      transportId,
       remark,
+      items,
     } = req.body;
 
     // 1. Create Sold Items
@@ -36,14 +38,14 @@ exports.createSale = async (req, res) => {
         itemCode,
         itemName,
         hsn,
-        mrp,
-        discountPercent,
-        discountValue,
         rate,
+        discountPercent,
+        discountAmount,
+        netRate,
+        quantity,
         gstPercent,
-        gstValue,
-        qty,
-        total,
+        gstAmount,
+        totalAmount,
         uom,
       } = item;
 
@@ -56,7 +58,7 @@ exports.createSale = async (req, res) => {
 
       if (stock) {
         // Deduct the sold quantity from stock, allowing stock to go negative
-        stock.qty -= qty;
+        stock.qty -= quantity;
       } else {
         // If no stock entry exists, return an error message
         return res.status(404).json({
@@ -78,10 +80,11 @@ exports.createSale = async (req, res) => {
       transportCharges,
       gstTotal,
       netTotal,
-      paymentMethod,
-      bankId,
       balance,
-      purchaseOrderNo,
+      cash,
+      card,
+      bankId,
+      transportId,
       remark,
     });
 
@@ -102,7 +105,7 @@ exports.getAllSales = async (req, res) => {
     // Find all sales and populate the reference to sold items
     const sales = await Sales.find().populate("soldItemsId");
 
-    res.status(200).json(sales);
+    res.status(200).json({ sales });
   } catch (error) {
     res.status(500).json({ message: "Error retrieving sales", error });
   }
@@ -132,8 +135,6 @@ exports.updateSale = async (req, res) => {
   try {
     const saleId = req.params.id;
     const {
-      soldItemsId,
-      items,
       customerId,
       invoiceNo,
       totalAmount,
@@ -141,105 +142,108 @@ exports.updateSale = async (req, res) => {
       transportCharges,
       gstTotal,
       netTotal,
-      paymentMethod,
-      bankId,
       balance,
-      purchaseOrderNo,
+      cash,
+      card,
+      bankId,
+      transportId,
       remark,
+      items,
     } = req.body;
 
-    // 1. Find the current sale document
-    const currentSale = await Sales.findById(saleId).populate("soldItemsId");
-    if (!currentSale) {
+    // 1. Find the existing sale
+    const sale = await Sales.findById(saleId);
+    if (!sale) {
       return res.status(404).json({ message: "Sale not found" });
     }
-    console.log("step 1 current sale founded");
-    // 2. Update stock for each item in the current sale (reverse the original stock change)
-    for (const currentItem of currentSale.soldItemsId.items) {
+
+    // 2. Validate invoiceNo uniqueness if changed
+    if (invoiceNo && invoiceNo !== sale.invoiceNo) {
+      const existingSale = await Sales.findOne({ invoiceNo });
+      if (existingSale) {
+        return res
+          .status(400)
+          .json({ message: "Invoice number must be unique" });
+      }
+    }
+
+    // 3. Revert stock quantities from OLD sold items
+    const oldSoldItems = await SoldItem.findById(sale.soldItemsId);
+    if (!oldSoldItems) {
+      return res
+        .status(404)
+        .json({ message: "Associated sold items not found" });
+    }
+
+    for (const oldItem of oldSoldItems.items) {
       const stock = await Stock.findOne({
-        companyId: currentItem.companyId,
-        itemCode: currentItem.itemCode,
-        itemName: currentItem.itemName,
+        companyId: oldItem.companyId,
+        itemcode: oldItem.itemCode,
+        item: oldItem.itemName,
       });
 
       if (stock) {
-        stock.qty += currentItem.qty; // Restore the original stock
+        stock.qty += oldItem.quantity; // Add back original quantity
         await stock.save();
       }
     }
 
-    console.log("step 2 loop is passed");
+    // 4. Update sold items with NEW data
+    if (items) {
+      // Delete old sold items
+      await SoldItem.findByIdAndDelete(sale.soldItemsId);
 
-    // 3. Find the sold item document (related to the updated sale)
-    const soldItemDoc = await SoldItem.findById(soldItemsId);
-    if (!soldItemDoc) {
-      return res.status(404).json({ message: "Sold item document not found" });
-    }
-    console.log("step 3 soldItemDoc line is successfully passed");
+      // Create new sold items
+      const newSoldItems = new SoldItem({ items });
+      await newSoldItems.save();
+      sale.soldItemsId = newSoldItems._id;
 
-    // 4. Update the items within the sold items document
-    items.forEach((item) => {
-      const index = soldItemDoc.items.findIndex(
-        (i) => i._id.toString() === item._id
-      );
-      if (index !== -1) {
-        soldItemDoc.items[index] = item;
-      } else {
-        console.error(`Item with ID ${item._id} not found in sold items.`);
-      }
-    });
+      // Deduct NEW quantities from stock
+      for (const newItem of items) {
+        const stock = await Stock.findOne({
+          companyId: newItem.companyId,
+          itemcode: newItem.itemCode,
+          item: newItem.itemName,
+        });
 
-    await soldItemDoc.save();
-    console.log("step 4 is succesfully passed");
-
-    // 5. Update stock based on new quantities
-    console.log("my items are ", items);
-    for (const item of items) {
-      console.log("companyId:", item.companyId);
-      console.log("itemCode:", item.itemCode);
-      console.log("itemName:", item.itemName);
-      const stock = await Stock.findOne({
-        companyId: item.companyId,
-        itemCode: item.itemCode,
-        itemName: item.itemName,
-      });
-      console.log("my stock is ", stock);
-      if (stock) {
-        stock.qty -= item.qty; // Deduct the updated quantity from stock
-        await stock.save();
+        if (stock) {
+          stock.qty -= newItem.quantity;
+          await stock.save();
+        } else {
+          return res.status(404).json({
+            message: `Stock not found for item: ${newItem.itemName} in company: ${newItem.companyId}`,
+          });
+        }
       }
     }
-    console.log("step 5 is succesfully passed");
 
-    // 6. Update the sale data
+    // 5. Update sale document
     const updatedSale = await Sales.findByIdAndUpdate(
       saleId,
       {
         customerId,
         invoiceNo,
-        soldItemsId: soldItemDoc._id, // Reference to the updated sold items
         totalAmount,
         discount,
         transportCharges,
         gstTotal,
         netTotal,
-        paymentMethod,
-        bankId,
         balance,
-        purchaseOrderNo,
+        cash,
+        card,
+        bankId,
+        transportId,
         remark,
+        soldItemsId: sale.soldItemsId,
       },
       { new: true }
-    );
-
-    if (!updatedSale) {
-      return res.status(404).json({ message: "Sale not found" });
-    }
+    ).populate("soldItemsId");
 
     res
       .status(200)
       .json({ message: "Sale updated successfully", sale: updatedSale });
   } catch (error) {
+    console.error("Error updating sale:", error);
     res.status(500).json({ message: "Error updating sale", error });
   }
 };
@@ -304,3 +308,250 @@ exports.filterSales = async (req, res) => {
     res.status(500).json({ message: "Error retrieving sales data", error });
   }
 };
+
+const getCurrentMonthRange = () => {
+  const now = new Date();
+  const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  return { firstDay, lastDay };
+};
+
+exports.getSalesSummary = async (req, res) => {
+  try {
+    let { from, to } = req.query;
+
+    // Use current month's range if no filters are provided
+    if (!from || !to) {
+      const { firstDay, lastDay } = getCurrentMonthRange();
+      from = new Date(firstDay);
+      to = new Date(lastDay);
+    } else {
+      from = new Date(from);
+      to = new Date(to);
+    }
+
+    console.log("Filtering sales from:", from, "to:", to);
+
+    const result = await Sales.aggregate([
+      {
+        $match: {
+          saleDate: { $gte: from, $lte: to },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalNetRate: { $sum: "$netTotal" },
+          totalGst: { $sum: "$gstTotal" },
+          saleAmount: { $sum: "$totalAmount" },
+          transportCharges: { $sum: "$transportCharges" },
+          cashReceived: { $sum: "$cash" },
+          cardReceived: { $sum: "$card" },
+        },
+      },
+    ]);
+
+    const summary =
+      result.length > 0
+        ? result[0]
+        : {
+            totalNetRate: 0,
+            totalGst: 0,
+            saleAmount: 0,
+            transportCharges: 0,
+            cashReceived: 0,
+            cardReceived: 0,
+          };
+
+    res.status(200).json({ summary });
+  } catch (error) {
+    console.error("Error in fetching sales summary:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+exports.getSalesSummaryForHomeSection = async (req, res) => {
+  try {
+    // Get the start and end of the current day
+    const now = new Date();
+    const startOfDay = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate()
+    );
+    const endOfDay = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+      23,
+      59,
+      59
+    );
+
+    console.log(
+      "Fetching today's sales summary from:",
+      startOfDay,
+      "to:",
+      endOfDay
+    );
+
+    const result = await Sales.aggregate([
+      {
+        $match: {
+          saleDate: { $gte: startOfDay, $lte: endOfDay },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalNetRate: { $sum: "$netTotal" },
+          totalGst: { $sum: "$gstTotal" },
+          saleAmount: { $sum: "$totalAmount" },
+          transportCharges: { $sum: "$transportCharges" },
+          cashReceived: { $sum: "$cash" },
+          cardReceived: { $sum: "$card" },
+        },
+      },
+    ]);
+
+    const summary =
+      result.length > 0
+        ? result[0]
+        : {
+            totalNetRate: 0,
+            totalGst: 0,
+            saleAmount: 0,
+            transportCharges: 0,
+            cashReceived: 0,
+            cardReceived: 0,
+          };
+
+    res.status(200).json({ summary });
+  } catch (error) {
+    console.error("Error in fetching sales summary:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+// Calculate total net rate
+// exports.totalSale = async (req, res) => {
+//   try {
+//     let { from, to } = req.query;
+
+//     // If no filter is applied, use the current month
+//     if (!from || !to) {
+//       const { firstDay, lastDay } = getCurrentMonthRange();
+//       from = firstDay;
+//       to = lastDay;
+//     } else {
+//       from = new Date(from);
+//       to = new Date(to);
+//     }
+
+//     const result = await Sales.aggregate([
+//       { $match: { date: { $gte: from, $lte: to } } },
+//       {
+//         $group: {
+//           _id: null,
+//           totalNetRate: { $sum: "$netTotal" },
+//         },
+//       },
+//     ]);
+
+//     const totalNetRate = result[0]?.totalNetRate || 0; // Default to 0 if no results
+//     res.status(200).json({ totalNetRate });
+//   } catch (error) {
+//     console.error("Error in calculating total net rate:", error);
+//     res.status(500).json({ error: "Internal Server Error" });
+//   }
+// };
+// exports.totalGst = async (req, res) => {
+//   try {
+//     const result = await Sales.aggregate([
+//       {
+//         $group: {
+//           _id: null,
+//           totalGst: { $sum: "$gstTotal" },
+//         },
+//       },
+//     ]);
+
+//     const totalGst = result[0]?.totalGst || 0; // Default to 0 if no results
+//     res.status(200).json({ totalGst });
+//   } catch (error) {
+//     console.error("Error in calculating total gst:", error);
+//     res.status(500).json({ error: "Internal Server Error" });
+//   }
+// };
+// exports.saleAmount = async (req, res) => {
+//   try {
+//     const result = await Sales.aggregate([
+//       {
+//         $group: {
+//           _id: null,
+//           saleAmount: { $sum: "$totalAmount" },
+//         },
+//       },
+//     ]);
+
+//     const saleAmount = result[0]?.saleAmount || 0; // Default to 0 if no results
+//     res.status(200).json({ saleAmount });
+//   } catch (error) {
+//     console.error("Error in calculating sale Amount:", error);
+//     res.status(500).json({ error: "Internal Server Error" });
+//   }
+// };
+// exports.transportCharges = async (req, res) => {
+//   try {
+//     const result = await Sales.aggregate([
+//       {
+//         $group: {
+//           _id: null,
+//           transportCharges: { $sum: "$transportCharges" },
+//         },
+//       },
+//     ]);
+
+//     const transportCharges = result[0]?.transportCharges || 0; // Default to 0 if no results
+//     res.status(200).json({ transportCharges });
+//   } catch (error) {
+//     console.error("Error in calculating transport Charges:", error);
+//     res.status(500).json({ error: "Internal Server Error" });
+//   }
+// };
+// exports.cashReceived = async (req, res) => {
+//   try {
+//     const result = await Sales.aggregate([
+//       {
+//         $group: {
+//           _id: null,
+//           cashReceived: { $sum: "$cash" },
+//         },
+//       },
+//     ]);
+
+//     const cashReceived = result[0]?.cashReceived || 0; // Default to 0 if no results
+//     res.status(200).json({ cashReceived });
+//   } catch (error) {
+//     console.error("Error in calculating cash Received:", error);
+//     res.status(500).json({ error: "Internal Server Error" });
+//   }
+// };
+// exports.cardReceived = async (req, res) => {
+//   try {
+//     const result = await Sales.aggregate([
+//       {
+//         $group: {
+//           _id: null,
+//           cardReceived: { $sum: "$card" },
+//         },
+//       },
+//     ]);
+
+//     const cardReceived = result[0]?.cardReceived || 0; // Default to 0 if no results
+//     res.status(200).json({ cardReceived });
+//   } catch (error) {
+//     console.error("Error in calculating card Received:", error);
+//     res.status(500).json({ error: "Internal Server Error" });
+//   }
+// };

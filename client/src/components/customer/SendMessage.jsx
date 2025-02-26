@@ -1,7 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FaPaperPlane, FaTimes } from "react-icons/fa";
+import axios from "axios";
 
 const SendMessage = () => {
+  const API_URL = import.meta.env.VITE_BACKEND_BASE_API_URL;
+
   const [formData, setFormData] = useState({
     recipient: "",
     subject: "",
@@ -9,18 +12,7 @@ const SendMessage = () => {
   });
 
   const [selectedCustomers, setSelectedCustomers] = useState([]);
-  const [customers] = useState([
-    { id: 1, name: "John Doe", mobile: "1234567890" },
-    { id: 2, name: "Jane Smith", mobile: "0987654321" },
-    { id: 3, name: "Alice Johnson", mobile: "1231231234" },
-    { id: 4, name: "Bob Brown", mobile: "4564564567" },
-    { id: 5, name: "Charlie Davis", mobile: "7897897890" },
-    { id: 6, name: "David Wilson", mobile: "2342342345" },
-    { id: 7, name: "Eve Miller", mobile: "5675675678" },
-    { id: 8, name: "Frank Thomas", mobile: "6786786789" },
-    { id: 9, name: "Grace Lee", mobile: "3453453456" },
-    { id: 10, name: "Hank Adams", mobile: "8768768765" },
-  ]);
+  const [customers, setCustomers] = useState([]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -57,11 +49,20 @@ const SendMessage = () => {
 
   const handleSelectAll = (e) => {
     if (e.target.checked) {
-      setSelectedCustomers(customers.map((customer) => customer.id));
+      setSelectedCustomers(customers.map((customer) => customer._id));
     } else {
       setSelectedCustomers([]);
     }
   };
+
+  useEffect(() => {
+    axios
+      .get(`${API_URL}/api/customers`)
+      .then((response) => setCustomers(response.data))
+      .catch((error) =>
+        console.log("getting errors in fetching customers ", error)
+      );
+  }, []);
 
   return (
     <div className="flex flex-col lg:flex-row justify-center items-start min-h-screen bg-base-200 p-2 gap-4">
@@ -162,19 +163,19 @@ const SendMessage = () => {
           </thead>
           <tbody>
             {customers.map((customer) => (
-              <tr key={customer.id}>
+              <tr key={customer._id}>
                 <td>
                   <label>
                     <input
                       type="checkbox"
                       className="checkbox checkbox-sm"
-                      checked={selectedCustomers.includes(customer.id)}
-                      onChange={() => handleSelectCustomer(customer.id)}
+                      checked={selectedCustomers.includes(customer._id)}
+                      onChange={() => handleSelectCustomer(customer._id)}
                     />
                   </label>
                 </td>
-                <td>{customer.name}</td>
-                <td>{customer.mobile}</td>
+                <td>{customer.full_name}</td>
+                <td>{customer.contact_no}</td>
               </tr>
             ))}
           </tbody>

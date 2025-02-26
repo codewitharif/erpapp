@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+
 const AddPurchase = () => {
   const API_URL = import.meta.env.VITE_BACKEND_BASE_API_URL;
 
   const [companies, setCompanies] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
-  const [bankAccounts, setbankAccounts] = useState([]);
+  const [bankAccounts, setBankAccounts] = useState([]);
   const [transports, setTransports] = useState([]);
   const [filteredSuppliers, setFilteredSuppliers] = useState([]);
   const [supplierName, setSupplierName] = useState("");
@@ -15,7 +16,7 @@ const AddPurchase = () => {
   const [supplierId, setSupplierId] = useState("");
   const [purchaseDate, setPurchaseDate] = useState("");
   const [billNo, setBillNo] = useState("");
-  let [totalAmount, setTotalAmount] = useState(0);
+  const [totalAmount, setTotalAmount] = useState(0);
   const [gstTotal, setGstTotal] = useState(0);
   const [otherCharges, setOtherCharges] = useState(0);
   const [discount, setDiscount] = useState(0);
@@ -30,47 +31,64 @@ const AddPurchase = () => {
   const [remark, setRemark] = useState("");
 
   // States for sold item fields
-  const [companyId, setcompanyId] = useState("");
+  const [companyId, setCompanyId] = useState("");
   const [itemCode, setItemCode] = useState("");
   const [itemName, setItemName] = useState("");
   const [hsn, setHsn] = useState("");
   const [rate, setRate] = useState(0);
   const [discountPercent, setDiscountPercent] = useState(0);
-  let [discountRs, setDiscountRs] = useState(0);
-  let [netRate, setNetRate] = useState(0);
+  const [discountRs, setDiscountRs] = useState(0);
+  const [netRate, setNetRate] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [gstPercent, setGstPercent] = useState(0);
-  let [gst, setGst] = useState(0);
+  const [gst, setGst] = useState(0);
   const [mrp, setMrp] = useState(0);
   const [total, setTotal] = useState(0);
 
   // Items array to hold individual item objects
   const [items, setItems] = useState([]);
 
-  // autofill for suggestion states
+  // Autofill for suggestion states
   const [allItems, setAllItems] = useState([]); // Store all items fetched from api/stocks
   const [filteredItems, setFilteredItems] = useState([]); // Store filtered items for suggestions
 
-  const [stockData, setStockData] = useState([
-    {
-      itemCode: "",
-      companyId: "",
-      item: "",
-      description: "",
-      hsn: "",
-      gst: "",
-      qty: 0,
-      mrp: "",
-      cp: "",
-    },
-  ]);
+  // State to track the item being edited
+  const [editIndex, setEditIndex] = useState(null);
 
+  // Fetch data on component mount
+  useEffect(() => {
+    axios
+      .get(`${API_URL}/api/companies`)
+      .then((response) => setCompanies(response.data))
+      .catch((error) => console.error("Error fetching companies:", error));
+
+    axios
+      .get(`${API_URL}/api/suppliers`)
+      .then((response) => setSuppliers(response.data.suppliers))
+      .catch((error) => console.error("Error fetching suppliers:", error));
+
+    axios
+      .get(`${API_URL}/api/bankAccounts`)
+      .then((response) => setBankAccounts(response.data))
+      .catch((error) => console.error("Error fetching bank accounts:", error));
+
+    axios
+      .get(`${API_URL}/api/transports`)
+      .then((response) => setTransports(response.data))
+      .catch((error) => console.error("Error fetching transports:", error));
+
+    axios
+      .get(`${API_URL}/api/stocks`)
+      .then((response) => setAllItems(response.data))
+      .catch((error) => console.error("Error fetching items:", error));
+  }, []);
+
+  // Calculate item fields when rate, discountPercent, gstPercent, or quantity changes
   useEffect(() => {
     const discountRsValue = (Number(rate) * Number(discountPercent)) / 100;
     const netRateValue = Number(rate) - discountRsValue;
-    let gstValue = (netRateValue * Number(gstPercent)) / 100;
-    gstValue *= quantity;
-    const totalValue = (netRateValue + gstValue) * Number(quantity);
+    const gstValue = ((netRateValue * Number(gstPercent)) / 100) * quantity;
+    const totalValue = netRateValue * quantity + gstValue;
 
     setDiscountRs(discountRsValue);
     setNetRate(netRateValue);
@@ -78,43 +96,25 @@ const AddPurchase = () => {
     setTotal(totalValue);
   }, [rate, discountPercent, gstPercent, quantity]);
 
+  // Calculate summary when items, otherCharges, or discount changes
   useEffect(() => {
-    axios
-      .get(`${API_URL}/api/companies`)
-      .then((response) => setCompanies(response.data))
-      .catch((error) => console.error("Error fetching companies:", error));
+    calculateSummary();
+  }, [items, otherCharges, discount]);
 
-    // Fetch all suppliers
-    axios
-      .get(`${API_URL}/api/suppliers`)
-      .then((response) => setSuppliers(response.data.suppliers))
-      .catch((error) => console.error("Error fetching suppliers:", error));
-    //fetch all bank accounts
-    axios
-      .get(`${API_URL}/api/bankAccounts`)
-      .then((response) => setbankAccounts(response.data))
-      .catch((error) => console.error("Error fetching suppliers:", error));
-    axios
-      .get(`${API_URL}/api/transports`)
-      .then((response) => setTransports(response.data))
-      .catch((error) => console.error("Error fetching suppliers:", error));
+  // Calculate balance when netTotal, cash, card, or cheque changes
+  useEffect(() => {
+    const newBalance = netTotal - (cash + card + cheque);
+    setBalance(newBalance);
+  }, [netTotal, cash, card, cheque]);
 
-    // Fetch all items for autofill
-    axios
-      .get(`${API_URL}/api/stocks`)
-      .then((response) => setAllItems(response.data))
-      .catch((error) => console.error("Error fetching items:", error));
-  }, []);
-
+  // Handle supplier input change and filter suggestions
   const handleSupplierChange = (e) => {
     const input = e.target.value;
-    setSupplierId(input);
-
     setSupplierName(input);
 
     if (input) {
       const matches = suppliers.filter((supplier) =>
-        supplier.supplierName.toLowerCase().includes(input.toLowerCase())
+        supplier.supplierName.toLowerCase().startsWith(input.toLowerCase())
       );
       setFilteredSuppliers(matches);
       setShowSuggestions(true);
@@ -123,50 +123,29 @@ const AddPurchase = () => {
     }
   };
 
+  // Select a supplier from suggestions
   const selectSupplier = (supplier) => {
     setSupplierName(supplier.supplierName);
     setSupplierId(supplier._id);
     setShowSuggestions(false);
   };
 
-  // const calculateSummary = () => {
-  //   const totalAmount = items.reduce((acc, item) => acc + item.total, 0);
-  //   const gstTotal = items.reduce((acc, item) => acc + item.gst, 0);
-  //   const netTotal =
-  //     totalAmount +
-  //     gstTotal +
-  //     parseFloat(otherCharges || 0) -
-  //     parseFloat(discount || 0);
-
-  //   setTotalAmount(totalAmount);
-  //   setGstTotal(gstTotal);
-  //   setNetTotal(netTotal);
-  // };
+  // Calculate summary totals
   const calculateSummary = () => {
-    const totalAmount = items.reduce((acc, item) => acc + item.netRate, 0);
-    const gstTotal = items.reduce((acc, item) => acc + item.gstAmount, 0);
-    const netTotal = items.reduce((acc, item) => acc + item.totalAmount, 0);
-
-    console.log("the value of nettotal is ", netTotal);
-
-    const totalDiscountRs = items.reduce(
-      (acc, item) => acc + item.discountAmount,
+    const totalAmount = items.reduce(
+      (acc, item) => acc + item.netRate * item.quantity,
       0
     );
+    const gstTotal = items.reduce((acc, item) => acc + item.gstAmount, 0);
+    const netTotal =
+      totalAmount + gstTotal + Number(otherCharges) - Number(discount);
 
-    let fnetTotal = netTotal + Number(otherCharges) - Number(discount);
-
-    setTotalAmount(netTotal - gstTotal);
+    setTotalAmount(totalAmount);
     setGstTotal(gstTotal);
-    setNetTotal(fnetTotal);
-    setBalance(fnetTotal);
+    setNetTotal(netTotal);
   };
 
-  useEffect(() => {
-    calculateSummary();
-  }, [items, otherCharges, discount]);
-
-  // Function to add an item to the items state
+  // Add an item to the items array
   const addItem = () => {
     const newItem = {
       companyId,
@@ -183,13 +162,52 @@ const AddPurchase = () => {
       mrp,
       totalAmount: total,
     };
-    console.log("our new item is ", newItem);
 
-    // Update items state with the new item
-    setItems((prevItems) => [...prevItems, newItem]);
+    if (editIndex !== null) {
+      // Update existing item
+      const updatedItems = [...items];
+      updatedItems[editIndex] = newItem;
+      setItems(updatedItems);
+      setEditIndex(null); // Reset edit mode
+    } else {
+      // Add new item
+      setItems((prevItems) => [...prevItems, newItem]);
+    }
+
+    // Reset form fields
+    setCompanyId("");
+    setItemCode("");
+    setItemName("");
+    setHsn("");
+    setRate(0);
+    setDiscountPercent(0);
+    setQuantity(1);
+    setGstPercent(0);
+    setMrp(0);
   };
 
-  // Submit handler to create the purchase object and call the API
+  // Handle edit item
+  const handleEdit = (index) => {
+    const item = items[index];
+    setCompanyId(item.companyId);
+    setItemCode(item.itemCode);
+    setItemName(item.itemName);
+    setHsn(item.hsn);
+    setRate(item.rate);
+    setDiscountPercent(item.discountPercent);
+    setQuantity(item.quantity);
+    setGstPercent(item.gstPercent);
+    setMrp(item.mrp);
+    setEditIndex(index); // Set the index of the item being edited
+  };
+
+  // Handle delete item
+  const handleDelete = (index) => {
+    const updatedItems = items.filter((_, i) => i !== index);
+    setItems(updatedItems);
+  };
+
+  // Handle form submission
   const handleSubmit = async () => {
     const purchaseData = {
       supplierId,
@@ -212,20 +230,18 @@ const AddPurchase = () => {
     };
 
     try {
-      console.warn(purchaseData);
-      console.log(purchaseData);
       const response = await axios.post(
         `${API_URL}/api/purchases`,
         purchaseData
       );
-      alert("purchased saved succesfully");
+      alert("Purchase saved successfully");
       console.log("Purchase saved successfully:", response.data);
     } catch (error) {
       console.error("Error saving purchase:", error);
     }
   };
 
-  //code for autofill purchases
+  // Handle item input change for autofill suggestions
   const handleItemInputChange = (value) => {
     setItemName(value);
     const matches = allItems.filter((item) =>
@@ -234,27 +250,24 @@ const AddPurchase = () => {
     setFilteredItems(matches);
   };
 
+  // Handle item selection from autofill suggestions
   const handleItemSelect = (selectedItem) => {
-    console.log(selectedItem);
-
-    // Find the supplier name from the suppliers list
-
-    setcompanyId(selectedItem.companyId);
+    setCompanyId(selectedItem.companyId);
     setItemCode(selectedItem.itemcode);
     setItemName(selectedItem.item);
     setHsn(selectedItem.hsn);
     setRate(selectedItem.rate);
     setGstPercent(selectedItem.gstPercent);
-    setRate(selectedItem.mrpinrs);
+    setMrp(selectedItem.mrpinrs);
     setFilteredItems([]); // Clear suggestions after selecting an item
   };
+
   return (
     <div className="p-4">
-      {/* Header */}
-      <h1 className="text-2xl font-bold mb-4">New Purchase </h1>
+      <h1 className="text-2xl font-bold mb-4">New Purchase</h1>
 
+      {/* Supplier Information */}
       <h3 className="text-lg font-semibold mb-2">Supplier</h3>
-      {/* Customer Information */}
       <div className="border border-gray-300 p-4 mb-4 rounded">
         <div className="flex flex-wrap items-center gap-4 mb-4">
           <div className="form-control w-full sm:w-48 relative">
@@ -288,7 +301,7 @@ const AddPurchase = () => {
             )}
           </div>
           <div className="form-control w-full sm:w-48">
-            <label className="label">Purchase Date </label>
+            <label className="label">Purchase Date</label>
             <input
               type="date"
               onChange={(e) => setPurchaseDate(e.target.value)}
@@ -314,11 +327,10 @@ const AddPurchase = () => {
           <div className="form-control w-full sm:w-32">
             <select
               value={companyId}
-              onChange={(e) => setcompanyId(e.target.value)}
+              onChange={(e) => setCompanyId(e.target.value)}
               className="select select-bordered select-xs"
             >
-              <option value="-All-">-company-</option>
-
+              <option value="-All-">-Company-</option>
               {companies.map((company) => (
                 <option key={company._id} value={company._id}>
                   {company.companyName}
@@ -401,7 +413,7 @@ const AddPurchase = () => {
           <div className="form-control w-full sm:w-32">
             <input
               type="text"
-              placeholder=" Net Rate"
+              placeholder="Net Rate"
               className="input input-bordered input-xs"
               value={netRate}
               onChange={(e) => setNetRate(e.target.value)}
@@ -437,7 +449,7 @@ const AddPurchase = () => {
             />
           </div>
           <button onClick={addItem} className="btn btn-info btn-xs">
-            Add
+            {editIndex !== null ? "Update" : "Add"}
           </button>
         </div>
 
@@ -452,12 +464,12 @@ const AddPurchase = () => {
                 <th>Dis(%)</th>
                 <th>Dis (Rs.)</th>
                 <th>Net Rate</th>
-
                 <th>GST(%)</th>
                 <th>GST (Rs.)</th>
                 <th>Qty</th>
                 <th>Total (Rs.)</th>
                 <th>MRP</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -475,6 +487,20 @@ const AddPurchase = () => {
                   <td>{item.quantity}</td>
                   <td>{item.totalAmount}</td>
                   <td>{item.mrp}</td>
+                  <td>
+                    <button
+                      onClick={() => handleEdit(index)}
+                      className="btn btn-xs btn-warning mr-2"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(index)}
+                      className="btn btn-xs btn-error"
+                    >
+                      Delete
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -485,7 +511,6 @@ const AddPurchase = () => {
       {/* Amount Summary */}
       <h3 className="text-lg font-semibold mb-2">Amount Summary</h3>
       <div className="border border-gray-300 p-4 mb-4 rounded">
-        {/* Flex container to separate left and right sections */}
         <div className="flex flex-wrap lg:flex-nowrap gap-4">
           {/* Left section for Amount Summary fields */}
           <div className="flex-1 border border-gray-300 p-4 rounded">
@@ -497,7 +522,7 @@ const AddPurchase = () => {
                   placeholder="Total"
                   value={totalAmount}
                   className="input input-bordered input-sm"
-                  onChange={(e) => setTotalAmount(e.target.value)}
+                  readOnly
                 />
               </div>
               <div className="form-control w-full lg:w-32">
@@ -507,7 +532,7 @@ const AddPurchase = () => {
                   placeholder="GST Total"
                   value={gstTotal}
                   className="input input-bordered input-sm"
-                  onChange={(e) => setGstTotal(e.target.value)}
+                  readOnly
                 />
               </div>
               <div className="form-control w-full lg:w-32">
@@ -536,7 +561,6 @@ const AddPurchase = () => {
                   value={netTotal}
                   className="input input-bordered bg-gray-100 input-sm"
                   readOnly
-                  onChange={(e) => setNetTotal(e.target.value)}
                 />
               </div>
             </div>
@@ -580,14 +604,12 @@ const AddPurchase = () => {
               </div>
               <div className="form-control w-full lg:w-32">
                 <label className="label">Bank</label>
-
                 <select
                   value={bankId}
                   onChange={(e) => setBankId(e.target.value)}
                   className="select select-bordered select-sm"
                 >
-                  <option value="-All-">-select-</option>
-
+                  <option value="-All-">-Select-</option>
                   {bankAccounts.map((bank) => (
                     <option key={bank._id} value={bank._id}>
                       {bank.bankName}
@@ -599,9 +621,10 @@ const AddPurchase = () => {
                 <label className="label">Balance (Rs.)</label>
                 <input
                   type="text"
-                  placeholder="Received"
+                  placeholder="Balance"
+                  value={balance}
                   className="input input-bordered input-sm"
-                  onChange={(e) => setBalance(e.target.value)}
+                  readOnly
                 />
               </div>
             </div>
@@ -616,8 +639,7 @@ const AddPurchase = () => {
                 onChange={(e) => setTransportId(e.target.value)}
                 className="select select-bordered select-sm"
               >
-                <option value="-All-">-select-</option>
-
+                <option value="-All-">-Select-</option>
                 {transports.map((transport) => (
                   <option key={transport._id} value={transport._id}>
                     {transport.transporter}

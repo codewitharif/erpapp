@@ -271,7 +271,7 @@ const BankAccount = () => {
                     <td>{new Date(editData.updatedAt).toLocaleString()}</td>
                     <td>
                       <button
-                        className="btn btn-info btn-xs mr-2"
+                        className="btn btn-success btn-xs mr-2"
                         onClick={() => handleSaveEdit(index)}
                       >
                         <FaSave />

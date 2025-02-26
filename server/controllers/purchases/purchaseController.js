@@ -562,9 +562,9 @@ exports.deletePurchase = async (req, res) => {
     // 3. Delete the sale itself
     await Purchase.findByIdAndDelete(purchaseId);
 
-    res.status(200).json({ message: "Sale deleted successfully" });
+    res.status(200).json({ message: "Purchase deleted successfully" });
   } catch (error) {
-    res.status(500).json({ message: "Error deleting sale", error });
+    res.status(500).json({ message: "Error deleting purchase", error });
   }
 };
 
@@ -643,3 +643,130 @@ exports.filterPurchases = async (req, res) => {
 //     )
 //   );
 // }
+
+const getCurrentMonthRange = () => {
+  const now = new Date();
+  const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  return { firstDay, lastDay };
+};
+
+exports.getPurchaseSummary = async (req, res) => {
+  try {
+    let { from, to } = req.query;
+
+    // Use current month's range if no filters are provided
+    if (!from || !to) {
+      const { firstDay, lastDay } = getCurrentMonthRange();
+      from = new Date(firstDay);
+      to = new Date(lastDay);
+    } else {
+      from = new Date(from);
+      to = new Date(to);
+    }
+
+    console.log("Filtering purchase from:", from, "to:", to);
+
+    const result = await Purchase.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: from, $lte: to },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalAmount: { $sum: "$totalAmount" },
+          totalGst: { $sum: "$gstTotal" },
+          netTotal: { $sum: "$netTotal" },
+          otherCharges: { $sum: "$otherCharges" },
+          cashPaid: { $sum: "$cash" },
+          cardPaid: { $sum: "$card" },
+        },
+      },
+    ]);
+
+    const summary =
+      result.length > 0
+        ? result[0]
+        : {
+            totalAmount: 0,
+            totalGst: 0,
+            netTotal: 0,
+            otherCharges: 0,
+            cashPaid: 0,
+            cardPaid: 0,
+          };
+
+    res.status(200).json({ summary });
+  } catch (error) {
+    console.error("Error in fetching purchase summary:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+exports.getPurchaseSummaryForHomeSection = async (req, res) => {
+  try {
+    // Get the start and end of the current day
+    const now = new Date();
+    const startOfDay = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate()
+    );
+    const endOfDay = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+      23,
+      59,
+      59
+    );
+
+    console.log(
+      "Fetching today's purchase summary from:",
+      startOfDay,
+      "to:",
+      endOfDay
+    );
+
+    const result = await Purchase.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: startOfDay, $lte: endOfDay },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalAmount: { $sum: "$totalAmount" },
+          totalGst: { $sum: "$gstTotal" },
+          netTotal: { $sum: "$netTotal" },
+          otherCharges: { $sum: "$otherCharges" },
+          cashPaid: { $sum: "$cash" },
+          cardPaid: { $sum: "$card" },
+        },
+      },
+    ]);
+
+    const summary =
+      result.length > 0
+        ? result[0]
+        : {
+            totalAmount: 0,
+            totalGst: 0,
+            netTotal: 0,
+            otherCharges: 0,
+            cashPaid: 0,
+            cardPaid: 0,
+          };
+
+    res.status(200).json({ summary });
+  } catch (error) {
+    console.error(
+      "Error in fetching purchase summary for home section:",
+      error
+    );
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};

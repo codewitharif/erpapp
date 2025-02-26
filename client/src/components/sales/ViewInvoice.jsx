@@ -1,6 +1,39 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { FaEdit, FaTrash, FaSearch, FaSave, FaTimes } from "react-icons/fa";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+
 const ViewInvoice = () => {
+  const API_URL = import.meta.env.VITE_BACKEND_BASE_API_URL;
+  const navigate = useNavigate();
+
+  const [sales, setSales] = useState([]);
+  const [customers, setCustomers] = useState([]);
+
+  //api calls  on page loading
+  useEffect(() => {
+    axios
+      .get(`${API_URL}/api/sales`)
+      .then((response) => setSales(response.data.sales))
+      .catch((error) => console.log("Error in fetching sales ", error));
+    axios
+      .get(`${API_URL}/api/customers`)
+      .then((response) => setCustomers(response.data))
+      .catch((error) => console.log("Error in fetching customers ", error));
+  }, []);
+
+  const handleEditClick = (saleId) => {
+    console.log("the supplier id is ", saleId);
+    navigate(`/updateSales/${saleId}`);
+    // const purchaseDetail = purchases.filter(
+    //   (purchase) => purchase._id === purchaseId
+    // );
+
+    // console.log("my purchase detail is ", purchaseDetail);
+  };
+
+  console.log("my sales are ", sales);
+  console.log("my customers are ", customers);
   return (
     <div className="p-4">
       {/* Header */}
@@ -46,7 +79,7 @@ const ViewInvoice = () => {
 
       {/* Invoice Table */}
       <div className="overflow-x-auto">
-        <table className="table table-zebra w-full text-sm">
+        <table className="table  table-xs w-full text-sm">
           <thead>
             <tr>
               <th>Sr.</th>
@@ -55,40 +88,69 @@ const ViewInvoice = () => {
               <th>SaleTotal</th>
               <th>Discount</th>
               <th>GST (Rs.)</th>
-              <th>Freight</th>
+              <th>Transport Charges</th>
               <th>Cash</th>
               <th>Card</th>
-              <th>Cheque</th>
               <th>Balance</th>
               <th>SaleDate</th>
               <th>Remark</th>
             </tr>
           </thead>
           <tbody>
-            {/* Sample Row */}
-            <tr>
-              <td>1</td>
-              <td>16</td>
-              <td>Naman Ji</td>
-              <td>8012.00</td>
-              <td>0.00</td>
-              <td>1238.00</td>
-              <td>500.00</td>
-              <td>5000.00</td>
-              <td>1000.00</td>
-              <td>0.00</td>
-              <td>9750.00</td>
-              <td>01/10/2024 06:27</td>
-              <td>
-                <button className="btn btn-warning btn-xs mr-2">
-                  <FaEdit />
-                </button>
-                <button className="btn = btn-error btn-xs ">
-                  <FaTrash />
-                </button>
-              </td>
-            </tr>
-            {/* Add more rows as needed */}
+            {/* {sales.map((sale, index) => (
+              <tr key={sale.id || index}>
+                <td>{index + 1}</td>
+                <td>{sale.invoiceNo}</td>
+                <td>{sale.customerId}</td>
+                <td>{sale.netTotal}</td>
+                <td>{sale.discount}</td>
+                <td>{sale.gstTotal}</td>
+                <td>{sale.transportCharges}</td>
+                <td>{sale.cash}</td>
+                <td>{sale.card}</td>
+                <td>{sale.balance}</td>
+                <td>{new Date(sale.saleDate).toLocaleString()}</td>
+                <td>
+                  <button className="btn btn-warning btn-xs mr-2">
+                    <FaEdit />
+                  </button>
+                  <button className="btn btn-error btn-xs">
+                    <FaTrash />
+                  </button>
+                </td>
+              </tr>
+            ))} */}
+            {sales.map((sale, index) => {
+              const customer = customers.find(
+                (customer) => customer._id === sale.customerId
+              );
+              return (
+                <tr key={sale._id || index}>
+                  <td>{index + 1}</td>
+                  <td>{sale.invoiceNo}</td>
+                  <td>{customer ? customer.full_name : "Unknown"}</td>
+                  <td>{sale.netTotal}</td>
+                  <td>{sale.discount}</td>
+                  <td>{sale.gstTotal}</td>
+                  <td>{sale.transportCharges}</td>
+                  <td>{sale.cash}</td>
+                  <td>{sale.card}</td>
+                  <td>{sale.balance}</td>
+                  <td>{new Date(sale.saleDate).toLocaleString()}</td>
+                  <td>
+                    <button
+                      className="btn btn-warning btn-xs mr-2"
+                      onClick={() => handleEditClick(sale._id)}
+                    >
+                      <FaEdit />
+                    </button>
+                    <button className="btn btn-error btn-xs">
+                      <FaTrash />
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

@@ -1,7 +1,8 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { FaSearch } from "react-icons/fa";
-const ViewSales = () => {
+
+const PurchaseReport = () => {
   const API_URL = import.meta.env.VITE_BACKEND_BASE_API_URL;
 
   const [summaryData, setSummaryData] = useState(null); // Store all fetched data
@@ -10,7 +11,7 @@ const ViewSales = () => {
 
   const fetchSummaryData = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/sales/summary`, {
+      const response = await axios.get(`${API_URL}/api/purchases/summary`, {
         params: {
           from,
           to,
@@ -18,7 +19,7 @@ const ViewSales = () => {
       });
       setSummaryData(response.data.summary);
     } catch (error) {
-      console.error("Error fetching sales summary:", error);
+      console.error("Error fetching purchase summary:", error);
     }
   };
 
@@ -26,11 +27,11 @@ const ViewSales = () => {
     fetchSummaryData();
   }, [from, to]); // Refetch data when filters change
 
-  console.log("my total sale is ", summaryData);
+  console.log("my total purchase is ", summaryData);
   return (
     <div className="p-4">
       {/* Header */}
-      <h2 className="text-lg font-bold mb-4">Sale Report Summary</h2>
+      <h2 className="text-lg font-bold mb-4">Purchase Report Summary</h2>
 
       {/* Date Range Filter */}
       <div className="flex flex-wrap items-center gap-4 mb-4">
@@ -69,33 +70,29 @@ const ViewSales = () => {
 
       {/* Monthly Summary Title */}
       <h3 className="text-lg font-semibold mb-4">
-        Sale/Purchase/Receipt for this month Oct 2024
+        Purchase/Receipt for this month Oct 2024
       </h3>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Sales Summary - Left Section */}
+        {/* Purchase Summary - Left Section */}
         <div className="bg-base-100 p-4 rounded-md shadow">
-          <h4 className="text-xl font-semibold mb-2">Sale</h4>
+          <h4 className="text-xl font-semibold mb-2">Purchase</h4>
           <div className="flex justify-between py-1">
-            <span>Sale :</span>
-            <span>{summaryData?.saleAmount}</span>
+            <span>Purchase :</span>
+            <span>{summaryData?.totalAmount}</span>
           </div>
           <div className="flex justify-between py-1">
             <span>GST Charged :</span>
             <span>{summaryData?.totalGst}</span>
           </div>
           <div className="flex justify-between py-1">
-            <span>Transport Charges :</span>
-            <span>{summaryData?.transportCharges}</span>
+            <span>Other Charges :</span>
+            <span>{summaryData?.otherCharges}</span>
           </div>
           <hr className="my-2" />
           <div className="flex justify-between py-1 font-semibold">
-            <span>Total Sale : </span>
-            <span>{summaryData?.totalNetRate}</span>
-          </div>
-          <div className="flex justify-between py-1">
-            <span>Purchases :</span>
-            <span>18200.00</span>
+            <span>Total Purchase Value : </span>
+            <span>{summaryData?.netTotal}</span>
           </div>
         </div>
 
@@ -103,15 +100,15 @@ const ViewSales = () => {
         <div className="bg-base-100 p-4 rounded-md shadow">
           <h4 className="text-xl font-semibold mb-2 text-right">Receipt</h4>
           <div className="flex justify-between py-1">
-            <span>Cash Received :</span>
-            <span>{summaryData?.cashReceived}</span>
+            <span>Cash Transaction :</span>
+            <span>{summaryData?.cashPaid}</span>
           </div>
           <div className="flex justify-between py-1">
-            <span>Bank Received :</span>
-            <span>{summaryData?.cardReceived}</span>
+            <span>Bank Transfer :</span>
+            <span>{summaryData?.cardPaid}</span>
           </div>
           <div className="flex justify-between py-1">
-            <span>Sale Return :</span>
+            <span>Purchase Return :</span>
             <span></span>
           </div>
         </div>
@@ -120,4 +117,4 @@ const ViewSales = () => {
   );
 };
 
-export default ViewSales;
+export default PurchaseReport;

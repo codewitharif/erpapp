@@ -125,127 +125,131 @@ const AddStocks = () => {
     <div className="p-4">
       <h1 className="text-2xl font-bold mb-4">New Stock</h1>
 
-      <table className="table table-xs overflow-x-auto">
-        <thead>
-          <tr className="bg-none-200">
-            <th className="border p-2">Sr.</th>
-            <th className="border p-2">ItemCode</th>
-            <th className="border p-2">Company</th>
-            <th className="border p-2">Item</th>
-            <th className="border p-2">Item Description</th>
-            <th className="border p-2">HSN</th>
-            <th className="border p-2">GST(%)</th>
-            <th className="border p-2">Qty</th>
-            <th className="border p-2">MRP(Rs.)</th>
-            <th className="border p-2">CP(Rs.)</th>
-          </tr>
-        </thead>
-        <tbody>
-          {stockData.map((stock, index) => (
-            <tr key={index}>
-              <td className="border p-2">{index + 1}</td>
-              <td className="border p-2">
-                <input
-                  type="text"
-                  value={stock.itemCode}
-                  onChange={(e) =>
-                    handleChange(index, "itemCode", e.target.value)
-                  }
-                  className="border w-full p-1"
-                />
-              </td>
-              <td className="border p-2">
-                <select
-                  value={stock.companyId}
-                  onChange={(e) =>
-                    handleChange(index, "companyId", e.target.value)
-                  }
-                  className="border w-full p-1"
-                >
-                  <option value="">-select-</option>
-                  {Array.isArray(companies) &&
-                    companies.map((company) => (
-                      <option key={company._id} value={company._id}>
-                        {company.companyName}
-                      </option>
-                    ))}
-                </select>
-              </td>
-              <td className="border p-2 relative">
-                <input
-                  type="text"
-                  value={stock.item}
-                  onChange={(e) => handleItemInputChange(index, e.target.value)}
-                  className="border w-full p-1"
-                />
-                {filteredItems.length > 0 && (
-                  <div className="absolute top-full left-0 bg-white border border-gray-300 w-full z-10">
-                    {filteredItems.map((suggestion) => (
-                      <div
-                        key={suggestion.itemCode}
-                        onClick={() => handleItemSelect(index, suggestion)}
-                        className="p-2 cursor-pointer hover:bg-gray-200"
-                      >
-                        {suggestion.item}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </td>
-              <td className="border p-2">
-                <input
-                  type="text"
-                  value={stock.description}
-                  onChange={(e) =>
-                    handleChange(index, "description", e.target.value)
-                  }
-                  className="border w-full p-1"
-                />
-              </td>
-              <td className="border p-2">
-                <input
-                  type="text"
-                  value={stock.hsn}
-                  onChange={(e) => handleChange(index, "hsn", e.target.value)}
-                  className="border w-full p-1"
-                />
-              </td>
-              <td className="border p-2">
-                <input
-                  type="text"
-                  value={stock.gst}
-                  onChange={(e) => handleChange(index, "gst", e.target.value)}
-                  className="border w-full p-1"
-                />
-              </td>
-              <td className="border p-2">
-                <input
-                  type="text"
-                  value={stock.qty}
-                  onChange={(e) => handleChange(index, "qty", e.target.value)}
-                  className="border w-full p-1"
-                />
-              </td>
-              <td className="border p-2">
-                <input
-                  type="text"
-                  value={stock.mrp}
-                  onChange={(e) => handleChange(index, "mrp", e.target.value)}
-                  className="border w-full p-1"
-                />
-              </td>
-              <td className="border p-2">
-                <input
-                  type="text"
-                  value={stock.cp}
-                  onChange={(e) => handleChange(index, "cp", e.target.value)}
-                  className="border w-full p-1"
-                />
-              </td>
+      <div className="overflow-x-auto">
+        <table className="table table-xs overflow-x-auto">
+          <thead>
+            <tr className="bg-none-200">
+              <th className="border p-2">Sr.</th>
+              <th className="border p-2">ItemCode</th>
+              <th className="border p-2">Company</th>
+              <th className="border p-2">Item</th>
+              <th className="border p-2">Item Description</th>
+              <th className="border p-2">HSN</th>
+              <th className="border p-2">GST(%)</th>
+              <th className="border p-2">Qty</th>
+              <th className="border p-2">MRP(Rs.)</th>
+              <th className="border p-2">CP(Rs.)</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {stockData.map((stock, index) => (
+              <tr key={index}>
+                <td className="border p-2">{index + 1}</td>
+                <td className="border p-2">
+                  <input
+                    type="text"
+                    value={stock.itemCode}
+                    onChange={(e) =>
+                      handleChange(index, "itemCode", e.target.value)
+                    }
+                    className="border w-full p-1"
+                  />
+                </td>
+                <td className="border p-2">
+                  <select
+                    value={stock.companyId}
+                    onChange={(e) =>
+                      handleChange(index, "companyId", e.target.value)
+                    }
+                    className="border w-full p-1"
+                  >
+                    <option value="">-select-</option>
+                    {Array.isArray(companies) &&
+                      companies.map((company) => (
+                        <option key={company._id} value={company._id}>
+                          {company.companyName}
+                        </option>
+                      ))}
+                  </select>
+                </td>
+                <td className="border p-2 relative">
+                  <input
+                    type="text"
+                    value={stock.item}
+                    onChange={(e) =>
+                      handleItemInputChange(index, e.target.value)
+                    }
+                    className="border w-full p-1"
+                  />
+                  {filteredItems.length > 0 && (
+                    <div className="absolute top-full left-0 bg-white border border-gray-300 w-full z-50">
+                      {filteredItems.map((suggestion) => (
+                        <div
+                          key={suggestion.itemCode}
+                          onClick={() => handleItemSelect(index, suggestion)}
+                          className="p-1 cursor-pointer hover:bg-gray-100"
+                        >
+                          {suggestion.item}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </td>
+                <td className="border p-2">
+                  <input
+                    type="text"
+                    value={stock.description}
+                    onChange={(e) =>
+                      handleChange(index, "description", e.target.value)
+                    }
+                    className="border w-full p-1"
+                  />
+                </td>
+                <td className="border p-2">
+                  <input
+                    type="text"
+                    value={stock.hsn}
+                    onChange={(e) => handleChange(index, "hsn", e.target.value)}
+                    className="border w-full p-1"
+                  />
+                </td>
+                <td className="border p-2">
+                  <input
+                    type="text"
+                    value={stock.gst}
+                    onChange={(e) => handleChange(index, "gst", e.target.value)}
+                    className="border w-full p-1"
+                  />
+                </td>
+                <td className="border p-2">
+                  <input
+                    type="text"
+                    value={stock.qty}
+                    onChange={(e) => handleChange(index, "qty", e.target.value)}
+                    className="border w-full p-1"
+                  />
+                </td>
+                <td className="border p-2">
+                  <input
+                    type="text"
+                    value={stock.mrp}
+                    onChange={(e) => handleChange(index, "mrp", e.target.value)}
+                    className="border w-full p-1"
+                  />
+                </td>
+                <td className="border p-2">
+                  <input
+                    type="text"
+                    value={stock.cp}
+                    onChange={(e) => handleChange(index, "cp", e.target.value)}
+                    className="border w-full p-1"
+                  />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
       <div className="flex justify-end mt-4">
         <button

@@ -1,7 +1,12 @@
 import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+
 import axios from "axios";
-const AddInvoice = () => {
+
+const UpdateSales = () => {
   const API_URL = import.meta.env.VITE_BACKEND_BASE_API_URL;
+
+  const { saleId } = useParams();
 
   const [customers, setCustomers] = useState([]);
   const [filteredCustomers, setFilteredCustomers] = useState([]);
@@ -45,6 +50,7 @@ const AddInvoice = () => {
   const [bankId, setBankId] = useState("");
   const [remark, setRemark] = useState("");
   const [transportId, setTransportId] = useState("");
+  const [soldItemsId, setSoldItemsId] = useState("");
 
   // States for sold item fields
   const [companyId, setcompanyId] = useState("");
@@ -85,6 +91,50 @@ const AddInvoice = () => {
       cp: "",
     },
   ]);
+
+  const fetchSale = async () => {
+    try {
+      console.log("i am inside handlesubmit");
+
+      const response = await axios.get(`${API_URL}/api/sales/${saleId}`);
+      const data = response.data;
+
+      setCustomerId(data.customerId);
+      console.log("hello bhai mera customer id ", data.customerId);
+      const customer = customers.find((c) => c._id === data.customerId);
+      console.log("hello bhai mera customer ", customer);
+
+      setCustomerName(customer ? customer.full_name : "Unknown customer");
+      setContactNo(customer.contact_no);
+      setAddress(customer.address);
+      setGstin(customer.gstin);
+      setState(customer.city);
+      const formattedDate = new Date(data.saleDate).toISOString().split("T")[0];
+      setSaleDate(formattedDate);
+
+      setInvoiceNo(data.invoiceNo);
+      console.log("my invoice no is", data.invoiceNo);
+      setBankId(data.bankId);
+      setGstTotal(data.gstTotal);
+      console.log("my total amount is this ", data.totalAmount);
+      setTotalAmount(data.totalAmount || 0);
+      setOtherCharges(data.transportCharges || 0);
+      setDiscount(data.discount || 0);
+      setNetTotal(data.netTotal || 0);
+      setCash(data.cash || 0);
+      setCard(data.card || 0);
+      console.log("my card is ");
+      setCheque(data.cheque || 0);
+      setChequeNo(data.chequeNo || "");
+      setTransportId(data.transportId || "");
+      setRemark(data.remark || "");
+      setSoldItemsId(data.soldItemsId._id);
+
+      setItems(data.soldItemsId.items);
+    } catch (error) {
+      console.error("Error fetching purchase data:", error);
+    }
+  };
 
   useEffect(() => {
     console.log("calculation ho rha hai ok na");
@@ -135,6 +185,13 @@ const AddInvoice = () => {
   }, []);
 
   //autofill code for customer selection
+
+  // Fetch purchase data when suppliers are loaded
+  useEffect(() => {
+    if (customers.length > 0) {
+      fetchSale();
+    }
+  }, [customers]);
 
   const handleCustomerChange = (e) => {
     const input = e.target.value;
@@ -260,13 +317,17 @@ const AddInvoice = () => {
       bankId,
       transportId,
       remark,
+      soldItemsId,
       items,
     };
 
     try {
+      console.log("i am inside handlesubmit");
       console.warn(salesData);
-      console.log(salesData);
-      const response = await axios.post(`${API_URL}/api/sales`, salesData);
+      const response = await axios.put(
+        `${API_URL}/api/sales/${saleId}`,
+        salesData
+      );
       alert("sales saved succesfully");
       console.log("sales saved successfully:", response.data);
     } catch (error) {
@@ -302,7 +363,6 @@ const AddInvoice = () => {
     setNetRate(selectedItem.mrpinrs);
     setFilteredItems([]); // Clear suggestions after selecting an item
   };
-  console.log("bhai ye ", uom);
 
   const handleEdit = (index) => {
     const item = items[index];
@@ -322,11 +382,12 @@ const AddInvoice = () => {
     const updatedItems = items.filter((_, i) => i !== index);
     setItems(updatedItems);
   };
-
+  console.log("bhai ye ", uom);
+  console.log("mera customer name", customerName);
   return (
     <div className="p-4">
       {/* Header */}
-      <h1 className="text-2xl font-bold mb-4">Add Sale</h1>
+      <h1 className="text-2xl font-bold mb-4">Update Sale</h1>
 
       {/* Invoice Number */}
       <div className="flex justify-between items-center mb-4">
@@ -335,6 +396,7 @@ const AddInvoice = () => {
           <span className="text-red-600">
             <input
               type="text"
+              value={invoiceNo}
               className="input input-bordered input-xs"
               onChange={(e) => setInvoiceNo(e.target.value)}
             />
@@ -499,7 +561,7 @@ const AddInvoice = () => {
           <div className="form-control w-full sm:w-24">
             <input
               type="text"
-              placeholder="Rate (Rs.)"
+              placeholder="MRP (Rs.)"
               value={rate}
               onChange={(e) => setRate(e.target.value)}
               className="input input-bordered input-xs"
@@ -562,9 +624,6 @@ const AddInvoice = () => {
               className="input input-bordered input-xs"
             />
           </div>
-          {/* <button onClick={addItem} className="btn btn-info btn-xs">
-            Add
-          </button> */}
 
           <button onClick={addItem} className="btn btn-info btn-xs">
             {editIndex !== null ? "Update" : "Add"}
@@ -585,15 +644,16 @@ const AddInvoice = () => {
                 <th>GST (Rs.)</th>
                 <th>Qty</th>
                 <th>Total (Rs.)</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {/* <tr>
-                <td colSpan="11" className="text-center">
-                  Please Add Items
-                </td>
+              <td colSpan="11" className="text-center">
+                Please Add Items
+              </td>
 
-              </tr> */}
+            </tr> */}
 
               {items.map((item, index) => (
                 <tr key={index}>
@@ -659,6 +719,7 @@ const AddInvoice = () => {
                 <label className="label">Transport (Rs.)</label>
                 <input
                   type="text"
+                  value={otherCharges}
                   placeholder="Transport"
                   className="input input-bordered input-sm"
                   onChange={(e) => setOtherCharges(e.target.value)}
@@ -668,6 +729,7 @@ const AddInvoice = () => {
                 <label className="label">Discount (Rs.)</label>
                 <input
                   type="text"
+                  value={discount}
                   placeholder="Discount"
                   className="input input-bordered input-sm"
                   onChange={(e) => setDiscount(e.target.value)}
@@ -692,6 +754,7 @@ const AddInvoice = () => {
                 <input
                   type="text"
                   placeholder="Cash"
+                  value={cash}
                   className="input input-bordered input-sm"
                   onChange={(e) => setCash(e.target.value)}
                 />
@@ -700,6 +763,7 @@ const AddInvoice = () => {
                 <label className="label">Card (Rs.)</label>
                 <input
                   type="text"
+                  value={card}
                   placeholder="Card"
                   className="input input-bordered input-sm"
                   onChange={(e) => setCard(e.target.value)}
@@ -724,6 +788,7 @@ const AddInvoice = () => {
                 <label className="label">Balance (Rs.)</label>
                 <input
                   type="text"
+                  value={balance}
                   placeholder="Balance"
                   className="input input-bordered input-sm"
                   onChange={(e) => setBalance(e.target.value)}
@@ -753,6 +818,7 @@ const AddInvoice = () => {
               <label className="label">Remark</label>
               <input
                 type="text"
+                value={remark}
                 placeholder="Remark"
                 className="input input-bordered input-sm"
                 onChange={(e) => setRemark(e.target.value)}
@@ -760,7 +826,7 @@ const AddInvoice = () => {
             </div>
             <div className="flex items-center">
               <button className="btn btn-primary btn-sm" onClick={handleSubmit}>
-                Save
+                Update
               </button>
             </div>
           </div>
@@ -775,4 +841,4 @@ const AddInvoice = () => {
   );
 };
 
-export default AddInvoice;
+export default UpdateSales;

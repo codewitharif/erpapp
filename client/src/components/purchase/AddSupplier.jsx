@@ -282,7 +282,7 @@ const AddSupplier = () => {
                         <FaSave />
                       </button>
                       <button
-                        className="btn btn-warning btn-xs"
+                        className="btn btn-error btn-xs"
                         onClick={handleCancelClick}
                       >
                         <FaTimes />

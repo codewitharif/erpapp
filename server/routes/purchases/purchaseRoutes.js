@@ -2,6 +2,12 @@ const express = require("express");
 const router = express.Router();
 const purchaseController = require("../../controllers/purchases/purchaseController");
 
+router.get("/summary", purchaseController.getPurchaseSummary);
+router.get(
+  "/summary-for-home",
+  purchaseController.getPurchaseSummaryForHomeSection
+);
+
 // POST /api/purchases - Create a new purchase
 router.post("/", purchaseController.createPurchase);
 

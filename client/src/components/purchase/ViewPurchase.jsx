@@ -12,6 +12,19 @@ const ViewPurchase = () => {
   const [supplierFilter, setsupplierFilter] = useState("-All-");
   const [selectedSupplier, setselectedSupplier] = useState("-All-");
 
+  const [purchaseSummaryData, setPurchaseSummaryData] = useState(null); // Store all fetched data
+
+  const fetchSummaryData = () => {
+    axios
+      .get(`${API_URL}/api/purchases/summary-for-home`)
+      .then((response) => setPurchaseSummaryData(response.data.summary))
+      .catch((error) => console.log("Error fetching purchase summary:", error));
+  };
+
+  useEffect(() => {
+    fetchSummaryData();
+  }, []); // Refetch data when filters change
+
   const handleEditClick = (purchaseId) => {
     console.log("the supplier id is ", purchaseId);
     navigate(`/updatePurchase/${purchaseId}`);
@@ -134,8 +147,11 @@ const ViewPurchase = () => {
                   <td className="p-2 border">{purchase.otherCharges}</td>
                   <td className="p-2 border">{purchase.netTotal}</td>
                   <td className="p-2 border">
-                    <button className="btn btn-warning btn-xs mr-2">
-                      <FaEdit onClick={() => handleEditClick(purchase._id)} />
+                    <button
+                      onClick={() => handleEditClick(purchase._id)}
+                      className="btn btn-warning btn-xs mr-2"
+                    >
+                      <FaEdit />
                     </button>
                     <button className="btn btn-error btn-xs">
                       <FaTrash />
@@ -143,16 +159,11 @@ const ViewPurchase = () => {
                   </td>
                 </tr>
               ))}
-              <tr>
+              <tr className="text-center">
                 <td className="p-2 border" colSpan="4">
                   Total
                 </td>
-                <td className="p-2 border">15423.72</td>
-                <td className="p-2 border">0</td>
-                <td className="p-2 border">2776.28</td>
-                <td className="p-2 border">0</td>
-                <td className="p-2 border">18200</td>
-                <td className="p-2 border"></td>
+                <td className="p-2 border">{purchaseSummaryData?.netTotal}</td>
               </tr>
             </tbody>
           </table>
