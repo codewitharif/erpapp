@@ -1,20 +1,38 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, Outlet } from "react-router-dom";
 import { FaChevronDown } from "react-icons/fa";
 
 const Navbar = () => {
   const [openMenu, setOpenMenu] = useState(null); // Track open submenu
 
+  // Initialize theme state from localStorage or default to "light"
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem("theme") || "light";
+  });
+
+  // Update the data-theme attribute on the document when theme changes
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+  }, [theme]);
+
+  // Toggle theme and save it to localStorage
+  const handleThemeToggle = () => {
+    const newTheme = theme === "light" ? "dark" : "light";
+    setTheme(newTheme);
+    localStorage.setItem("theme", newTheme);
+  };
+
   const toggleMenu = (menuName) => {
     if (openMenu === menuName) {
-      setOpenMenu(menuName); // Close if the same menu is clicked again
+      setOpenMenu(null); // Close menu if it's already open
     } else {
-      setOpenMenu(menuName); // Open the clicked menu and close others
+      setOpenMenu(menuName); // Open clicked menu and close others
     }
   };
+
   return (
     <div>
-      <div className="navbar bg-base-100  ">
+      <div className="navbar bg-base-100">
         <div className="navbar-start z-50">
           <div className="dropdown">
             <div tabIndex={0} role="button" className="btn btn-ghost lg:hidden">
@@ -56,9 +74,6 @@ const Navbar = () => {
                     <li>
                       <Link to="purchaseReport">Purchase Report</Link>
                     </li>
-                    {/* <li>
-                      <Link to="viewOrder">Purchase Info</Link>
-                    </li> */}
                   </ul>
                 </details>
               </li>
@@ -70,14 +85,10 @@ const Navbar = () => {
                       <Link to="addInvoice">New Invoice</Link>
                     </li>
                     <li>
-                      <Link to="viewInvoice">View Invoicce</Link>
+                      <Link to="viewInvoice">View Invoice</Link>
                     </li>
-
                     <li>
                       <Link to="saleReport">Sales Report</Link>
-                    </li>
-                    <li>
-                      <Link to="saleInfo">Sale Info</Link>
                     </li>
                   </ul>
                 </details>
@@ -147,12 +158,8 @@ const Navbar = () => {
                 <li>
                   <Link to="purchaseReport">Purchase Report</Link>
                 </li>
-                {/* <li>
-                  <Link to="viewOrder">Purchase Info</Link>
-                </li> */}
               </ul>
             </li>
-
             <li className="dropdown dropdown-hover">
               <summary tabIndex={0}>Sales</summary>
               <ul className="dropdown-content menu menu-sm bg-base-200 rounded-box w-56 z-50 p-2 pt-4 shadow">
@@ -162,16 +169,11 @@ const Navbar = () => {
                 <li>
                   <Link to="viewInvoice">View Invoice</Link>
                 </li>
-
                 <li>
                   <Link to="saleReport">Sales Report</Link>
                 </li>
-                <li>
-                  <Link to="saleInfo">Sale Info</Link>
-                </li>
               </ul>
             </li>
-
             <li className="dropdown dropdown-hover">
               <summary tabIndex={0}>Stocks</summary>
               <ul className="dropdown-content menu menu-sm bg-base-200 rounded-box w-56 z-50 p-2 pt-4 shadow">
@@ -192,7 +194,6 @@ const Navbar = () => {
                 </li>
               </ul>
             </li>
-
             <li className="dropdown dropdown-hover">
               <summary tabIndex={0}>Customers</summary>
               <ul className="dropdown-content menu menu-sm bg-base-200 rounded-box w-56 z-50 p-2 pt-4 shadow">
@@ -207,18 +208,23 @@ const Navbar = () => {
                 </li>
               </ul>
             </li>
-
             <li>
               <Link to="/config">Configurations</Link>
             </li>
           </ul>
         </div>
 
-        <div className="navbar-end ">
+        <div className="navbar-end">
+          {/* Theme Toggle */}
           <label className="grid cursor-pointer place-items-center">
+            {/* 
+                The checkbox's `checked` prop is set based on the current theme.
+                When toggled, it calls handleThemeToggle.
+            */}
             <input
               type="checkbox"
-              value="synthwave"
+              onChange={handleThemeToggle}
+              checked={theme === "dark"}
               className="toggle theme-controller bg-base-content col-span-2 col-start-1 row-start-1"
             />
             <svg

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+import toast, { Toaster } from "react-hot-toast";
 
 const AddCustomer = () => {
   const [fullName, setFullName] = useState("");
@@ -7,6 +8,7 @@ const AddCustomer = () => {
   const [city, setCity] = useState("");
   const [contact, setContact] = useState("");
   const [gstin, setGstin] = useState("");
+  const [email, setEmail] = useState("");
 
   // Base API URL
   const API_URL = import.meta.env.VITE_BACKEND_BASE_API_URL;
@@ -18,6 +20,7 @@ const AddCustomer = () => {
       city: city,
       contact_no: contact,
       gstin: gstin,
+      email: email,
     };
 
     try {
@@ -26,6 +29,7 @@ const AddCustomer = () => {
         customerData
       );
       console.log("Customer added:", response.data);
+      toast.success("Customer added successfully!"); // Show success message
 
       // Optionally, clear form fields after successful submission
       handleNew();
@@ -40,10 +44,12 @@ const AddCustomer = () => {
     setCity("");
     setContact("");
     setGstin("");
+    setEmail("");
   };
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-base-200">
+      <Toaster position="top-center" /> {/* Toast notifications */}
       <div className="bg-base-100 p-4 rounded shadow-lg w-72">
         <h2 className="text-xl font-semibold text-center mb-3">Add Customer</h2>
         <div className="form-control mb-3">
@@ -84,6 +90,16 @@ const AddCustomer = () => {
             onChange={(e) => setContact(e.target.value)}
             className="input input-sm input-bordered w-full"
             placeholder="Contact No"
+          />
+        </div>
+        <div className="form-control mb-3">
+          <label className="label text-sm">Email</label>
+          <input
+            type="text"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="input input-sm input-bordered w-full"
+            placeholder="Email ID"
           />
         </div>
         <div className="form-control mb-4">

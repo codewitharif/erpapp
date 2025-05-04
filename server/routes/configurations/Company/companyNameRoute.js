@@ -2,6 +2,12 @@ const express = require("express");
 const router = express.Router();
 const companyNameController = require("../../../controllers/configurations/Company/companyNameController");
 
+// company withpagination
+router.get(
+  "/companyWithPagination",
+  companyNameController.getAllCompaniesWithpagination
+);
+
 // Route to add a new company
 router.post("/", companyNameController.addCompanyName);
 

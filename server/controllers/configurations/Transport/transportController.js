@@ -35,6 +35,27 @@ exports.getAllTransports = async (req, res) => {
       .json({ message: "Error fetching transport entries", error });
   }
 };
+exports.getAllTransportsWithPagi = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 5;
+    const skip = (page - 1) * limit;
+
+    const transports = await Transport.find().skip(skip).limit(limit);
+    const total = await Transport.countDocuments();
+
+    res.status(200).json({
+      data: transports,
+      currentPage: page,
+      totalPages: Math.ceil(total / limit),
+      totalItems: total,
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error fetching transport entries", error });
+  }
+};
 
 // Get a transport entry by ID
 exports.getTransportById = async (req, res) => {

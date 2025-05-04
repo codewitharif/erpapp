@@ -36,6 +36,55 @@ exports.getAllBankAccounts = async (req, res) => {
   }
 };
 
+// exports.getAllBankAccountsWithPagination = async (req, res) => {
+//   try {
+//     const currentPage = parseInt(req.query.page) || 1;
+//     const itemsPerPage = parseInt(req.query.limit) || 5;
+//     const skipItems = (currentPage - 1) * itemsPerPage;
+
+//     const bankAccounts = await BankAccount.find()
+//       .skip(skipItems)
+//       .limit(itemsPerPage);
+
+//     const totalAccounts = await BankAccount.countDocuments();
+
+//     res.status(200).json({
+//       data: bankAccounts,
+//       currentPage,
+//       totalPages: Math.ceil(totalAccounts / itemsPerPage),
+//       totalItems: totalAccounts,
+//     });
+//   } catch (error) {
+//     res.status(500).json({ message: "Error fetching bank accounts", error });
+//   }
+// };
+
+// Get all bank accounts with pagination
+exports.getAllBankAccountsWithPagination = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 5;
+    const skip = (page - 1) * limit;
+
+    const totalCount = await BankAccount.countDocuments();
+    const totalPages = Math.ceil(totalCount / limit);
+
+    const bankAccounts = await BankAccount.find()
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 }); // Optional: latest first
+
+    res.status(200).json({
+      data: bankAccounts,
+      currentPage: page,
+      totalPages,
+      totalCount,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching bank accounts", error });
+  }
+};
+
 // Get a bank account by ID
 exports.getBankAccountById = async (req, res) => {
   try {

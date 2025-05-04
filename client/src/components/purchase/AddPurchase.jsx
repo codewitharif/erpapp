@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import toast, { Toaster } from "react-hot-toast";
 
 const AddPurchase = () => {
   const API_URL = import.meta.env.VITE_BACKEND_BASE_API_URL;
@@ -234,9 +235,10 @@ const AddPurchase = () => {
         `${API_URL}/api/purchases`,
         purchaseData
       );
-      alert("Purchase saved successfully");
+      toast.success("Purchase saved successfully!"); // Show success message
       console.log("Purchase saved successfully:", response.data);
     } catch (error) {
+      toast.error("Error saving purchase!"); // Show error message
       console.error("Error saving purchase:", error);
     }
   };
@@ -264,8 +266,8 @@ const AddPurchase = () => {
 
   return (
     <div className="p-4">
+      <Toaster position="top-center" /> {/* Toast notifications */}
       <h1 className="text-2xl font-bold mb-4">New Purchase</h1>
-
       {/* Supplier Information */}
       <h3 className="text-lg font-semibold mb-2">Supplier</h3>
       <div className="border border-gray-300 p-4 mb-4 rounded">
@@ -319,7 +321,6 @@ const AddPurchase = () => {
           </div>
         </div>
       </div>
-
       {/* Sold Items */}
       <h3 className="text-lg font-semibold mb-2">Sold Items</h3>
       <div className="border border-gray-300 p-4 mb-4 rounded">
@@ -507,7 +508,6 @@ const AddPurchase = () => {
           </table>
         </div>
       </div>
-
       {/* Amount Summary */}
       <h3 className="text-lg font-semibold mb-2">Amount Summary</h3>
       <div className="border border-gray-300 p-4 mb-4 rounded">
@@ -656,18 +656,15 @@ const AddPurchase = () => {
                 onChange={(e) => setRemark(e.target.value)}
               />
             </div>
-            <div className="flex items-center">
-              <button className="btn btn-primary btn-sm" onClick={handleSubmit}>
-                Save
-              </button>
-            </div>
+            <div className="flex items-center"></div>
           </div>
         </div>
       </div>
-
-      <div className="flex justify-between items-center">
-        <button className="btn btn-info">Submit</button>
-        <button className="btn btn-secondary">Print</button>
+      <div className="flex justify-end gap-4 mt-4">
+        <button className="btn btn-primary btn-sm" onClick={handleSubmit}>
+          Save
+        </button>
+        <button className="btn btn-secondary btn-sm">Print</button>
       </div>
     </div>
   );

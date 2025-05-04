@@ -2,6 +2,12 @@ const express = require("express");
 const router = express.Router();
 const transportController = require("../../../controllers/configurations/Transport/transportController");
 
+//route  to get all the transports
+router.get(
+  "/getAllTransportsWithPagination",
+  transportController.getAllTransportsWithPagi
+);
+
 // Route to add a new transport entry
 router.post("/", transportController.addTransport);
 

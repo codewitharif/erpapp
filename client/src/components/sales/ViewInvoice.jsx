@@ -1,7 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { FaEdit, FaTrash, FaSearch, FaSave, FaTimes } from "react-icons/fa";
+import {
+  FaEdit,
+  FaTrash,
+  FaSearch,
+  FaSave,
+  FaTimes,
+  FaPrint,
+} from "react-icons/fa";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import easyinvoice from "easyinvoice";
 
 const ViewInvoice = () => {
   const API_URL = import.meta.env.VITE_BACKEND_BASE_API_URL;
@@ -9,6 +17,7 @@ const ViewInvoice = () => {
 
   const [sales, setSales] = useState([]);
   const [customers, setCustomers] = useState([]);
+  const [terms, setTerms] = useState([]);
 
   //api calls  on page loading
   useEffect(() => {
@@ -20,6 +29,10 @@ const ViewInvoice = () => {
       .get(`${API_URL}/api/customers`)
       .then((response) => setCustomers(response.data))
       .catch((error) => console.log("Error in fetching customers ", error));
+    axios
+      .get(`${API_URL}/api/terms`)
+      .then((response) => setTerms(response.data))
+      .catch((error) => console.error("Error fetching terms:", error));
   }, []);
 
   const handleEditClick = (saleId) => {
@@ -30,6 +43,97 @@ const ViewInvoice = () => {
     // );
 
     // console.log("my purchase detail is ", purchaseDetail);
+  };
+
+  const getCustomerName = (customerId) => {
+    const customer = customers.find((cup) => cup._id === customerId);
+    return customer ? customer.full_name : "Unknown Supplier";
+  };
+
+  // getSupplierDetails function to get supplier details
+  // This function can be used to get the address, city, zip, and country of a supplier
+
+  const getCustomerDetails = (customerId) => {
+    console.log("the customer id is ", customerId);
+    const customer = customers.find((cup) => cup._id === customerId);
+    console.log("the customer is ", customer);
+    return customer
+      ? {
+          address: customer.address,
+          city: customer.city,
+          zip: "000000", // Agar supplier API mein zip nahi aata to default de sakte ho
+          country: "India",
+        }
+      : {
+          address: "Unknown Address",
+          city: "Unknown City",
+          zip: "000000",
+          country: "India",
+        };
+  };
+
+  // Function to handle print button click
+  const handlePrintClick = async (saleId) => {
+    try {
+      const response = await axios.get(`${API_URL}/api/sales/${saleId}`);
+      const sale = response.data;
+
+      // Fetch customer details using the customerId from the customer
+      const supplierDetails = getCustomerDetails(sale.customerId);
+
+      // Map your API sale structure to easyinvoice format
+      const invoiceData = {
+        sender: {
+          company: "ARIFA ENTERPRISES",
+          address: "RETGHAT, NEAR KAMLA PARK",
+          zip: "462001",
+          city: "BHOPAL",
+          country: "INDIA",
+        },
+        client: {
+          company: getCustomerName(sale.customerId),
+          address: supplierDetails.address,
+          zip: "00000",
+          city: supplierDetails.state,
+          country: "India",
+        },
+        information: {
+          number: sale.invoiceNo,
+          date: new Date(sale.saleDate).toISOString().split("T")[0],
+          "due-date": new Date(
+            new Date(sale.saleDate).setDate(
+              new Date(sale.saleDate).getDate() + 15
+            )
+          )
+            .toISOString()
+            .split("T")[0],
+        },
+        products: sale.soldItemsId.items.map((item) => ({
+          quantity: item.quantity,
+          description: item.itemName,
+          "tax-rate": item.gstPercent,
+          price: item.netRate,
+        })),
+        settings: {
+          currency: "INR",
+        },
+        "bottom-notice": `Terms & Conditions: ${terms
+          .map((term) => term.terms)
+          .join("<br/>")} \n<br/><br/>Thank you for your business!`,
+      };
+
+      const result = await easyinvoice.createInvoice(invoiceData);
+
+      // Convert base64 PDF to Blob and open in new tab
+      const pdfBlob = new Blob(
+        [Uint8Array.from(atob(result.pdf), (c) => c.charCodeAt(0))],
+        { type: "application/pdf" }
+      );
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      window.open(pdfUrl);
+    } catch (error) {
+      console.error("Error generating invoice:", error);
+    }
   };
 
   console.log("my sales are ", sales);
@@ -146,6 +250,13 @@ const ViewInvoice = () => {
                     </button>
                     <button className="btn btn-error btn-xs">
                       <FaTrash />
+                    </button>
+
+                    <button
+                      className="btn btn-primary btn-xs ml-2"
+                      onClick={() => handlePrintClick(sale._id)}
+                    >
+                      <FaPrint />
                     </button>
                   </td>
                 </tr>

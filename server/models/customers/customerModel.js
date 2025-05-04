@@ -17,6 +17,10 @@ const customerSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  email: {
+    type: String,
+    required: true,
+  },
   gstin: {
     type: String,
     required: false,

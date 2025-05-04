@@ -1,5 +1,5 @@
 const Customer = require("../../models/customers/customerModel");
-
+const nodemailer = require("nodemailer");
 // Create a new customer
 exports.createCustomer = async (req, res) => {
   try {
@@ -10,8 +10,6 @@ exports.createCustomer = async (req, res) => {
     res.status(400).json({ error: err.message });
   }
 };
-
-
 
 //get all customers
 exports.getAllCustomers = async (req, res) => {
@@ -85,5 +83,48 @@ exports.searchCustomers = async (req, res) => {
     res.status(200).json(customers);
   } catch (err) {
     res.status(400).json({ error: err.message });
+  }
+};
+
+// Send email to customer
+
+exports.sendMessage = async (req, res) => {
+  const { subject, message, recipients, sendToAll } = req.body;
+
+  try {
+    let targetCustomers = [];
+
+    if (sendToAll) {
+      targetCustomers = await Customer.find({});
+    } else if (recipients && recipients.length > 0) {
+      targetCustomers = await Customer.find({ _id: { $in: recipients } });
+    }
+
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.SMTP_EMAIL,
+        pass: process.env.SMTP_PASSWORD,
+      },
+    });
+
+    const sendPromises = targetCustomers.map((customer) => {
+      if (!customer.email) return null;
+      return transporter.sendMail({
+        from: process.env.SMTP_EMAIL,
+        to: customer.email,
+        subject,
+        text: message,
+      });
+    });
+
+    await Promise.all(sendPromises);
+
+    res
+      .status(200)
+      .json({ success: true, message: "Emails sent successfully" });
+  } catch (error) {
+    console.error("Email error:", error);
+    res.status(500).json({ success: false, error: error.message });
   }
 };

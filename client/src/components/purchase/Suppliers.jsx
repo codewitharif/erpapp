@@ -8,7 +8,7 @@ const Suppliers = () => {
     <div>
       <div className="flex h-screen">
         {/* Sidebar */}
-        <aside className="w-1/4 bg-base-200 p-4">
+        <aside className="w-1/4 h-screen bg-base-200 p-4">
           <ul className="menu space-y-2">
             <li>
               <button

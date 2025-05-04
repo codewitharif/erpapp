@@ -1,28 +1,35 @@
 import React, { useState, useEffect } from "react";
 import { FaEdit, FaTrash, FaSave, FaTimes } from "react-icons/fa"; // Import icons
-
+import toast, { Toaster } from "react-hot-toast";
 const BankAccount = () => {
   const API_URL = import.meta.env.VITE_BACKEND_BASE_API_URL;
   const [accountNo, setAccountNo] = useState("");
   const [bankName, setBankName] = useState("");
   const [accountName, setAccountName] = useState("");
   const [branch, setBranch] = useState("");
-  const [ifscCode, setIfscCode] = useState(""); // Changed variable name to 'ifscCode'
+  const [ifscCode, setIfscCode] = useState(""); // Changed variable name to 'ifscCode
 
   const [bankAccounts, setBankAccounts] = useState([]);
   const [editIndex, setEditIndex] = useState(null); // To track the row being edited
   const [editData, setEditData] = useState({}); // To store data during editing
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [limit, setLimit] = useState(5); // 👈 select box ke liye state
+
   // Function to fetch bank accounts on component mount
-  const fetchBankAccounts = async () => {
-    const response = await fetch(`${API_URL}/api/bankAccounts`);
+  const fetchBankAccounts = async (page, lim) => {
+    const response = await fetch(
+      `${API_URL}/api/bankAccounts/getAllBankAccountsWithPagination?page=${page}&limit=${lim}`
+    );
     const data = await response.json();
-    setBankAccounts(data);
+    setBankAccounts(data.data);
+    setTotalPages(data.totalPages);
   };
 
   useEffect(() => {
-    fetchBankAccounts();
-  }, []);
+    fetchBankAccounts(currentPage, limit);
+  }, [currentPage, limit]);
 
   const handleAddAccount = async () => {
     if (accountNo && bankName && accountName && branch && ifscCode) {
@@ -46,6 +53,8 @@ const BankAccount = () => {
 
       if (response.ok) {
         const addedAccount = await response.json();
+
+        toast.success("Bank account added successfully!");
         setBankAccounts([...bankAccounts, addedAccount]);
         fetchBankAccounts();
         clearForm();
@@ -76,6 +85,8 @@ const BankAccount = () => {
     );
 
     if (response.ok) {
+      toast.success("Bank account deleted successfully!");
+      // Remove the account from the state
       const updatedAccounts = bankAccounts.filter((_, i) => i !== index);
       setBankAccounts(updatedAccounts);
     } else {
@@ -112,6 +123,8 @@ const BankAccount = () => {
     );
 
     if (response.ok) {
+      toast.success("Bank account updated successfully!");
+
       setBankAccounts(updatedAccounts);
       setEditIndex(null);
       setEditData({});
@@ -123,6 +136,8 @@ const BankAccount = () => {
 
   return (
     <div className="p-4">
+      <Toaster position="top-center" />
+
       <h2 className="text-2xl font-bold mb-4">Add/Update Bank Account</h2>
 
       {/* Form Section */}
@@ -184,6 +199,24 @@ const BankAccount = () => {
             Save
           </button>
         </div>
+      </div>
+
+      {/* Limit Selector */}
+      <div className="flex justify-end mb-2 mt-8">
+        <label className="flex items-center gap-2">
+          <span className="text-sm">Items per page:</span>
+          <select
+            className="select select-bordered select-sm"
+            value={limit}
+            onChange={(e) => {
+              setLimit(Number(e.target.value));
+              setCurrentPage(1); // 👈 reset to page 1 on limit change
+            }}
+          >
+            <option value={5}>5</option>
+            <option value={10}>10</option>
+          </select>
+        </label>
       </div>
 
       {/* Bank Account Table */}
@@ -314,6 +347,23 @@ const BankAccount = () => {
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Pagination */}
+      <div className="mt-4 flex justify-center ">
+        <div className="join">
+          {[...Array(totalPages)].map((_, i) => (
+            <button
+              key={i}
+              className={`join-item btn btn-sm  ${
+                currentPage === i + 1 ? "btn-active btn-primary" : ""
+              }`}
+              onClick={() => setCurrentPage(i + 1)}
+            >
+              {i + 1}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );

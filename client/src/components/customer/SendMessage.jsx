@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FaPaperPlane, FaTimes } from "react-icons/fa";
 import axios from "axios";
+import toast, { Toaster } from "react-hot-toast";
 
 const SendMessage = () => {
   const API_URL = import.meta.env.VITE_BACKEND_BASE_API_URL;
@@ -19,17 +20,41 @@ const SendMessage = () => {
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleSend = (e) => {
+  // const handleSend = (e) => {
+  //   e.preventDefault();
+  //   // Handle send message logic here
+  //   console.log(
+  //     "Message Sent to:",
+  //     selectedCustomers.length ? selectedCustomers : formData.recipient
+  //   );
+  //   console.log("Message Details:", formData);
+  //   // Reset form after sending
+  //   setFormData({ recipient: "", subject: "", message: "" });
+  //   setSelectedCustomers([]);
+  // };
+
+  const handleSend = async (e) => {
     e.preventDefault();
-    // Handle send message logic here
-    console.log(
-      "Message Sent to:",
-      selectedCustomers.length ? selectedCustomers : formData.recipient
-    );
-    console.log("Message Details:", formData);
-    // Reset form after sending
-    setFormData({ recipient: "", subject: "", message: "" });
-    setSelectedCustomers([]);
+
+    try {
+      const payload = {
+        subject: formData.subject,
+        message: formData.message,
+        recipients: selectedCustomers,
+        sendToAll: selectedCustomers.length === customers.length,
+      };
+
+      await axios.post(`${API_URL}/api/customers/send`, payload);
+
+      toast.success("Message sent successfully!");
+
+      //alert("Message sent successfully!");
+      setFormData({ recipient: "", subject: "", message: "" });
+      setSelectedCustomers([]);
+    } catch (error) {
+      console.error("Sending failed:", error);
+      alert("Failed to send message. Check console for details.");
+    }
   };
 
   const handleCancel = () => {
@@ -66,9 +91,13 @@ const SendMessage = () => {
 
   return (
     <div className="flex flex-col lg:flex-row justify-center items-start min-h-screen bg-base-200 p-2 gap-4">
+      {/* Toast Notifications */}
+      <Toaster position="top-center" />
       {/* Left Side - Form */}
       <div className="bg-base-100 p-4 rounded-lg shadow-lg w-full lg:w-1/3">
-        <h2 className="text-xl font-semibold mb-4 text-center">Send Message</h2>
+        <h2 className="text-xl font-semibold mb-4 text-center">
+          Customer Messaging Center
+        </h2>
         <form onSubmit={handleSend}>
           {/* Recipient Field */}
           <div className="form-control mb-2">

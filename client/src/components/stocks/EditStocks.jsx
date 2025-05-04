@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FaEdit, FaTrash, FaSave, FaTimes } from "react-icons/fa";
 import axios from "axios";
+import toast, { Toaster } from "react-hot-toast";
 
 const EditStocks = () => {
   const [companies, setCompanies] = useState([]);
@@ -50,7 +51,7 @@ const EditStocks = () => {
   const filteredData = stockData.filter((stock) => {
     const isCompanyMatch =
       companyFilter === "-All-" ||
-      companyMap[stock.supplierId] === companyFilter;
+      companyMap[stock.companyId] === companyFilter;
     const isItemMatch =
       !itemFilter ||
       stock.item.toLowerCase().includes(itemFilter.toLowerCase());
@@ -88,7 +89,9 @@ const EditStocks = () => {
       const updatedStockData = stockData.map((item) =>
         item._id === editingRow ? editableData : item
       );
+      // Update the stockData state with the modified data
       setStockData(updatedStockData);
+      toast.success("Stock updated successfully!"); // Show success message
       setEditingRow(null); // Exit edit mode
     } catch (error) {
       console.error("Error updating stock data:", error);
@@ -103,6 +106,7 @@ const EditStocks = () => {
   const handleDeleteClick = (id) => {
     const filteredStockData = stockData.filter((item) => item.id !== id);
     setStockData(filteredStockData);
+    toast.success("Stock deleted successfully!"); // Show success message
   };
 
   const handleChange = (e) => {
@@ -115,8 +119,8 @@ const EditStocks = () => {
 
   return (
     <div className="p-4">
+      <Toaster position="top-center" /> {/* Toast notifications */}
       <h1 className="text-2xl font-bold mb-4">Edit Stocks</h1>
-
       {/* Filter Section */}
       <div className="flex flex-wrap items-center gap-4 mb-4">
         <div className="form-control w-full sm:w-auto">
@@ -164,7 +168,6 @@ const EditStocks = () => {
           )}
         </div>
       </div>
-
       <div className="overflow-x-auto">
         <table className="table w-full table-xs">
           <thead>

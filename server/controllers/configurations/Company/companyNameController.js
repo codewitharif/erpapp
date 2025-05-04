@@ -26,6 +26,27 @@ exports.getAllCompanies = async (req, res) => {
   }
 };
 
+// GET /api/companies?page=1&limit=5
+exports.getAllCompaniesWithpagination = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 5;
+    const skip = (page - 1) * limit;
+
+    const companies = await CompanyName.find().skip(skip).limit(limit);
+    const total = await CompanyName.countDocuments();
+
+    res.status(200).json({
+      data: companies,
+      currentPage: page,
+      totalPages: Math.ceil(total / limit),
+      totalItems: total,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching companies", error });
+  }
+};
+
 // Get a company by ID
 exports.getCompanyById = async (req, res) => {
   try {

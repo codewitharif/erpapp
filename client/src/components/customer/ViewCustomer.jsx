@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { FaEdit, FaTrash, FaSave, FaTimes, FaSearch } from "react-icons/fa";
+import toast, { Toaster } from "react-hot-toast";
 
 const API_URL = import.meta.env.VITE_BACKEND_BASE_API_URL;
 
@@ -75,10 +76,15 @@ const ViewCustomer = () => {
         `${API_URL}/api/customers/${customerId}`,
         editableData
       );
+
       const updatedCustomers = customers.map((customer) =>
         customer._id === customerId ? response.data : customer
       );
+      toast.success("Customer updated successfully!"); // Show success message
+      console.log("Updated customer:", response.data);
+
       setCustomers(updatedCustomers);
+
       setEditingRow(null);
     } catch (error) {
       console.error("Error updating customer:", error);
@@ -93,6 +99,7 @@ const ViewCustomer = () => {
   const handleDeleteClick = async (id) => {
     try {
       await axios.delete(`${API_URL}/api/customers/${id}`);
+      toast.success("Customer deleted successfully!"); // Show success message
       setCustomers(customers.filter((customer) => customer._id !== id));
     } catch (error) {
       console.error("Error deleting customer:", error);
@@ -101,8 +108,8 @@ const ViewCustomer = () => {
 
   return (
     <div className="container mx-auto p-4">
+      <Toaster position="top-center" /> {/* Toast notifications */}
       <h1 className="text-3xl font-bold mb-6">Customers List</h1>
-
       <div className="flex flex-wrap items-center gap-4 mb-4">
         <div className="form-control w-full sm:w-auto">
           <label className="font-semibold">Customer Name:</label>
@@ -150,7 +157,6 @@ const ViewCustomer = () => {
           <FaSearch />
         </button>
       </div>
-
       <div className="overflow-x-auto">
         <table className="table table-xs ">
           <thead>

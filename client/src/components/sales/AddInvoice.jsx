@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { Toaster } from "react-hot-toast";
 const AddInvoice = () => {
   const API_URL = import.meta.env.VITE_BACKEND_BASE_API_URL;
 
@@ -325,6 +326,7 @@ const AddInvoice = () => {
 
   return (
     <div className="p-4">
+      <Toaster position="top-center"></Toaster>
       {/* Header */}
       <h1 className="text-2xl font-bold mb-4">Add Sale</h1>
 
@@ -551,6 +553,10 @@ const AddInvoice = () => {
               <option value="KG">KG</option>
               <option value="GRAM">GRAM</option>
               <option value="LITRE">LITRE</option>
+              <option value="ML">ML (Millilitre)</option>
+              <option value="METER">METER</option>
+              <option value="CM">CM (Centimeter)</option>
+              <option value="PCS">PCS (Pieces)</option>
             </select>
           </div>
           <div className="form-control w-full sm:w-40">
@@ -758,18 +764,16 @@ const AddInvoice = () => {
                 onChange={(e) => setRemark(e.target.value)}
               />
             </div>
-            <div className="flex items-center">
-              <button className="btn btn-primary btn-sm" onClick={handleSubmit}>
-                Save
-              </button>
-            </div>
+            <div className="flex items-center"></div>
           </div>
         </div>
       </div>
 
-      <div className="flex justify-between items-center">
-        <button className="btn btn-info">Submit</button>
-        <button className="btn btn-secondary">Print</button>
+      <div className="flex justify-end gap-4 mt-4">
+        <button className="btn btn-primary btn-sm" onClick={handleSubmit}>
+          Save
+        </button>
+        <button className="btn btn-secondary btn-sm">Print</button>
       </div>
     </div>
   );

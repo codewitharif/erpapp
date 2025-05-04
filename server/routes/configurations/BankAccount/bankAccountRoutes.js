@@ -2,6 +2,12 @@ const express = require("express");
 const router = express.Router();
 const bankAccountController = require("../../../controllers/configurations/BankAccount/bankAccountController");
 
+//route to get all bankaccount with pagination
+router.get(
+  "/getAllBankAccountsWithPagination",
+  bankAccountController.getAllBankAccountsWithPagination
+);
+
 // Route to add a new bank account
 router.post("/", bankAccountController.addBankAccount);
 

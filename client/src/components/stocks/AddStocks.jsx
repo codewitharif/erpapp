@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import toast, { Toaster } from "react-hot-toast";
 
 const AddStocks = () => {
   const API_URL = import.meta.env.VITE_BACKEND_BASE_API_URL;
@@ -114,7 +115,8 @@ const AddStocks = () => {
           cpinrs: stock.cp,
         });
       }
-      alert("Stock data saved successfully!");
+      toast.success("Stock data saved successfully!"); // Show success message
+      // alert("Stock data saved successfully!");
     } catch (error) {
       console.error("Error saving stock data:", error);
       alert("Failed to save stock data.");
@@ -123,8 +125,8 @@ const AddStocks = () => {
 
   return (
     <div className="p-4">
+      <Toaster position="top-center" /> {/* Toast notifications */}
       <h1 className="text-2xl font-bold mb-4">New Stock</h1>
-
       <div className="overflow-x-auto">
         <table className="table table-xs overflow-x-auto">
           <thead>
@@ -250,7 +252,6 @@ const AddStocks = () => {
           </tbody>
         </table>
       </div>
-
       <div className="flex justify-end mt-4">
         <button
           className="bg-blue-500 text-white px-4 py-2 rounded mr-2"

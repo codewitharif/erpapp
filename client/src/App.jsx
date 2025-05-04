@@ -1,6 +1,7 @@
 import React from "react";
-import Navbar from "./components/Navbar";
 import { Routes, Route } from "react-router-dom";
+import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
 import Home from "./components/Home/Home";
 import Configuration from "./components/configurations/Configuration";
 import AddCustomer from "./components/customer/AddCustomer";
@@ -26,36 +27,42 @@ import UpdateSales from "./components/sales/UpdateSales";
 
 const App = () => {
   return (
-    <>
+    <div className="flex flex-col min-h-screen">
       <Navbar />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="config" element={<Configuration />} />
-        {/* customer routes */}
-        <Route path="addCustomer" element={<AddCustomer />} />
-        <Route path="viewCustomer" element={<ViewCustomer />} />
-        <Route path="sendMessage" element={<SendMessage />} />
-        {/* stocks routes */}
-        <Route path="addStocks" element={<AddStocks />} />
-        <Route path="viewStocks" element={<ViewStocks />} />
-        <Route path="editStocks" element={<EditStocks />} />
-        <Route path="availableStocks" element={<AvailableStocks />} />
-        <Route path="soldStocks" element={<SoldStocks />} />
-        {/* purchase routes */}
-        <Route path="addPurchase" element={<AddPurchase />} />
-        <Route path="viewPurchase" element={<ViewPurchase />} />
-        <Route path="addSupplier" element={<Suppliers />} />
-        <Route path="viewOrder" element={<ViewOrder />} />
-        <Route path="updatePurchase/:purchaseId" element={<UpdatePurchase />} />
-        <Route path="purchaseReport" element={<PurchaseReport />} />
-        {/* sale routes */}
-        <Route path="addInvoice" element={<AddInvoice />} />
-        <Route path="viewInvoice" element={<ViewInvoice />} />
-        <Route path="saleReport" element={<ViewSales />} />
-        <Route path="saleInfo" element={<SaleInfo />} />
-        <Route path="updateSales/:saleId" element={<UpdateSales />} />
-      </Routes>
-    </>
+      <main className="flex-1">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="config" element={<Configuration />} />
+          {/* customer routes */}
+          <Route path="addCustomer" element={<AddCustomer />} />
+          <Route path="viewCustomer" element={<ViewCustomer />} />
+          <Route path="sendMessage" element={<SendMessage />} />
+          {/* stocks routes */}
+          <Route path="addStocks" element={<AddStocks />} />
+          <Route path="viewStocks" element={<ViewStocks />} />
+          <Route path="editStocks" element={<EditStocks />} />
+          <Route path="availableStocks" element={<AvailableStocks />} />
+          <Route path="soldStocks" element={<SoldStocks />} />
+          {/* purchase routes */}
+          <Route path="addPurchase" element={<AddPurchase />} />
+          <Route path="viewPurchase" element={<ViewPurchase />} />
+          <Route path="addSupplier" element={<Suppliers />} />
+          <Route path="viewOrder" element={<ViewOrder />} />
+          <Route
+            path="updatePurchase/:purchaseId"
+            element={<UpdatePurchase />}
+          />
+          <Route path="purchaseReport" element={<PurchaseReport />} />
+          {/* sale routes */}
+          <Route path="addInvoice" element={<AddInvoice />} />
+          <Route path="viewInvoice" element={<ViewInvoice />} />
+          <Route path="saleReport" element={<ViewSales />} />
+          <Route path="saleInfo" element={<SaleInfo />} />
+          <Route path="updateSales/:saleId" element={<UpdateSales />} />
+        </Routes>
+      </main>
+      {/* <Footer /> */}
+    </div>
   );
 };
 

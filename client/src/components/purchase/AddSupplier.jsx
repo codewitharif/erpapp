@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FaEdit, FaTrash, FaSearch, FaSave, FaTimes } from "react-icons/fa";
 import axios from "axios";
-
+import toast, { Toaster } from "react-hot-toast";
 const AddSupplier = () => {
   const API_URL = import.meta.env.VITE_BACKEND_BASE_API_URL;
 
@@ -45,7 +45,9 @@ const AddSupplier = () => {
         `${API_URL}/api/suppliers`,
         newSupplier
       );
-      setsuppliers([...suppliers, response.data]);
+      console.log("Supplier added:", response.data.supplier);
+      toast.success("Supplier added successfully!");
+      setsuppliers([...suppliers, response.data.supplier]);
       setNewSupplier({
         supplierName: "",
         contactNo: "",
@@ -81,8 +83,9 @@ const AddSupplier = () => {
         editFormData
       );
       const updatedSuppliers = suppliers.map((supplier) =>
-        supplier._id === supplierId ? response.data : supplier
+        supplier._id === supplierId ? response.data.supplier : supplier
       );
+      toast.success("Supplier updated successfully!");
       setsuppliers(updatedSuppliers);
       setEditSupplierId(null);
       console.log("Supplier updated successfully.");
@@ -108,6 +111,7 @@ const AddSupplier = () => {
     try {
       // Make the DELETE request
       await axios.delete(`${API_URL}/api/suppliers/${supplierId}`);
+      toast.success("Supplier deleted successfully!");
 
       // Update the local state after successful deletion
       const newSuppliers = suppliers.filter(
@@ -123,7 +127,8 @@ const AddSupplier = () => {
   };
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="min-h-screen flex flex-col p-4">
+      <Toaster position="top-center" />
       <h1 className="text-3xl font-bold mb-6">Add Supplier</h1>
       <div className="flex flex-wrap items-center gap-4 mb-4">
         <div className="form-control w-full sm:w-auto">
@@ -197,8 +202,8 @@ const AddSupplier = () => {
           Add
         </button>
       </div>
-
-      <div className="overflow-x-auto">
+      {/* max-h-[60vh] overflow-y-auto border rounded */}
+      <div className=" overflow-x-auto overflow-y-auto  border rounded  ">
         <table className="table table-xs">
           <thead>
             <tr>
@@ -310,7 +315,7 @@ const AddSupplier = () => {
           </tbody>
         </table>
       </div>
-      <div className="flex justify-center mt-4">
+      <div className="flex justify-center mt-4 mb-auto">
         <div className="join">
           <input
             className="join-item btn btn-square btn-sm"
