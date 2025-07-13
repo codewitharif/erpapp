@@ -27,15 +27,9 @@ const supplierRoutes = require("./routes/purchases/supplierRoutes");
 
 // Middleware
 
-
 // app.use(cors())
-app.use(cors({
-  origin: ['https://bizstripe.vercel.app','http://localhost:5173', "*" ],
-  methods: ['GET', 'POST','PUT', 'PATCH', 'DELETE'],
-  credentials: true,
-}));
+app.use(cors());
 app.use(express.json());
-
 
 // Import Routes
 app.use("/api/customers", customerRoutes);
